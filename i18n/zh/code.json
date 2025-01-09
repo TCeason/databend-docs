@@ -412,8 +412,7 @@
   "Thanks for voting!": {
     "message": "感谢您的反馈！",
     "description": "Thanks for voting!"
-  }
-  ,
+  },
   "Did this page help you?": {
     "message": "这篇文章对您有帮助吗？",
     "description": "Did this page help you?"
@@ -497,5 +496,201 @@
   "Blog": {
     "message": "博客",
     "description": "Blog"
+  },
+  "Learn how to use Databend through guides, reference documentation.": {
+    "message": "通过指南和参考文档学习如何使用 Databend。",
+    "description": "学习如何使用 Databend 的描述"
+  },
+  "Quick Start": {
+    "message": "快速入门",
+    "description": "快速入门部分的标题"
+  },
+  "Get started with Databend in 5 minutes": {
+    "message": "5 分钟内开始使用 Databend",
+    "description": "快速入门部分的描述"
+  },
+  "Self-Hosted Databend": {
+    "message": "私有化部署 Databend",
+    "description": "自托管 Databend 部分的标题"
+  },
+  "These guides for deploying Databend": {
+    "message": "这些指南用于部署 Databend",
+    "description": "自托管 Databend 部分的描述"
+  },
+  "The fastest way to get started with Databend": {
+    "message": "开始使用 Databend 的最快方式",
+    "description": "Databend Cloud 部分的描述"
+  },
+  "Connect to Databend": {
+    "message": "连接到 Databend",
+    "description": "连接到 Databend 部分的标题"
+  },
+  "Developer Resources": {
+    "message": "开发者资源",
+    "description": "开发者资源的链接文字"
+  },
+  "Connect your application to Databend in just a few minutes.": {
+    "message": "几分钟内将您的应用程序连接到 Databend。",
+    "description": "连接到 Databend 部分的描述"
+  },
+  "Load Data into Databend": {
+    "message": "加载数据到 Databend",
+    "description": "加载数据到 Databend 部分的标题"
+  },
+  "Know More": {
+    "message": "了解更多",
+    "description": "了解更多的链接文字"
+  },
+  "Bulk import data into Databend(Cloud) in multiple formats.": {
+    "message": "以多种格式批量导入数据到 Databend(Cloud)。",
+    "description": "加载数据到 Databend 部分的描述"
+  },
+  "AI & BI & Visualization & Notebooks": {
+    "message": "AI & BI & 可视化 & 笔记本",
+    "description": "AI & BI & 可视化 & 笔记本 部分的标题"
+  },
+  "All Tools": {
+    "message": "所有工具",
+    "description": "所有工具的链接文字"
+  },
+  "Databend offers connectors and plugins for integrating with major data import tools, ensuring efficient data synchronization.": {
+    "message": "Databend 提供连接器和插件，用于与主要数据导入工具集成，确保高效的数据同步。",
+    "description": "AI & BI & 可视化 & 笔记本 部分的描述"
+  },
+  "Continuous Data Pipelines": {
+    "message": "连续数据管道",
+    "description": "连续数据管道部分的标题"
+  },
+  "Data pipelines automate the process of moving and changing data from different sources into Databend.": {
+    "message": "数据管道自动化地将来自不同来源的数据移动和更改到 Databend 中。",
+    "description": "连续数据管道部分的描述"
+  },
+  "Real-Time CDC Ingestion": {
+    "message": "实时 CDC 导入",
+    "description": "实时 CDC 导入的文本"
+  },
+  "Automated Data Pipelines": {
+    "message": "自动化数据管道",
+    "description": "自动化数据管道的文本"
+  },
+  "Additional Informations": {
+    "message": "额外信息",
+    "description": "额外信息部分的标题"
+  },
+  "AI Capabilities": {
+    "message": "AI 功能",
+    "description": "AI 功能的文本"
+  },
+  "Databend Products": {
+    "message": "Databend 的产品",
+    "description": "Databend 产品的文本"
+  },
+  "Security": {
+    "message": "安全",
+    "description": "安全的文本"
+  },
+  "Contact Support": {
+    "message": "联系客服",
+    "description": "联系支持的文本"
+  },
+  "Pricing": {
+    "message": "价格相关",
+    "description": "价格的文本"
+  },
+  "Use Cases": {
+    "message": "用户案例",
+    "description": "Use Cases"
+  },
+  "Introduction to Databend Products": {
+    "message": "Databend 产品介绍",
+    "description": "Databend 产品介绍部分的标题"
+  },
+  "Check out the products you can choose from.": {
+    "message": "查看您可以选择的产品。",
+    "description": "Databend 产品介绍部分的描述"
+  },
+  "Databend Cloud": {
+    "message": "Databend Cloud",
+    "description": "Databend Cloud 产品的标题"
+  },
+  "Fully-Managed on Cloud": {
+    "message": "全托管云服务",
+    "description": "Databend Cloud 产品的描述"
+  },
+  "Databend Enterprise": {
+    "message": "Databend 企业版",
+    "description": "Databend Enterprise 产品的标题"
+  },
+  "Self-Hosted with Additional Enterprise Features": {
+    "message": "自托管与额外的企业功能",
+    "description": "Databend Enterprise 产品的描述"
+  },
+  "Databend Community": {
+    "message": "Databend 社区版",
+    "description": "Databend 社区版 产品的标题"
+  },
+  "Self-Hosted & Free": {
+    "message": "自托管 & 免费",
+    "description": "Databend 社区版 产品的描述"
+  },
+  "Getting Started": {
+    "message": "入门指南",
+    "description": "入门指南部分的标题"
+  },
+  "Create a Databend Cloud account or deploy your own Databend instance.": {
+    "message": "创建一个 Databend Cloud 账户或部署您自己的 Databend 实例。",
+    "description": "入门指南部分的描述"
+  },
+  "Activate Databend Cloud": {
+    "message": "激活 Databend Cloud",
+    "description": "激活 Databend Cloud 卡片的标题"
+  },
+  "This topic": {
+    "message": "本话题",
+    "description": "此主题的链接文字"
+  },
+  "outlines the steps for applying for beta access as an organization.": {
+    "message": "描述了申请 Databend Cloud 账号的步骤。",
+    "description": "激活 Databend Cloud 卡片的描述"
+  },
+  "Topics you might find useful:": {
+    "message": "您可能觉得有用的话题：",
+    "description": "有用的主题小标题"
+  },
+  "Supported Platforms & Regions": {
+    "message": "支持的平台和地区",
+    "description": "支持的平台和地区的链接文字"
+  },
+  "Databend Cloud Editions": {
+    "message": "Databend Cloud 版本",
+    "description": "Databend Cloud 版本的链接文字"
+  },
+  "Pricing & Billing": {
+    "message": "价格与计费",
+    "description": "价格与计费的链接文字"
+  },
+  "provide detailed instructions for deploying and upgrading Databend.": {
+    "message": "提供有关部署和升级 Databend 的详细说明。",
+    "description": "自托管 Databend 卡片的描述"
+  },
+  "Downloading Databend": {
+    "message": "下载 Databend",
+    "description": "下载 Databend 的链接文字"
+  },
+  "Licensing Databend": {
+    "message": "Databend 授权",
+    "description": "Databend 授权的链接文字"
+  },
+  "Upgrading Databend": {
+    "message": "升级 Databend",
+    "description": "升级 Databend 的链接文字"
+  },
+  "Changelog": {
+    "message": "发布记录",
+    "description": "Changelog"
+  },
+  "FAQ": {
+    "message": "常见问题",
+    "description": "FAQ"
   }
 }

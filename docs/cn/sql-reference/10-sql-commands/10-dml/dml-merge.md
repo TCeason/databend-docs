@@ -1,96 +1,92 @@
 ---
 title: MERGE
 ---
+
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.241"/>
+<FunctionDescription description="引入或更新: v1.2.241"/>
 
-Performs INSERT, UPDATE, or DELETE operations on rows within a target table, all in accordance with conditions and matching criteria specified within the statement, using data from a specified source.
+根据语句中指定的条件和匹配标准，对目标表中的行执行INSERT、UPDATE或DELETE操作，使用指定源中的数据。
 
-The data source, which can be a subquery, is linked to the target data via a JOIN expression. This expression assesses whether each row in the source can find a match in the target table and then determines which type of clause (MATCHED or NOT MATCHED) it should move to in the next execution step.
+数据源（可以是子查询）通过JOIN表达式与目标数据链接。该表达式评估源中的每一行是否能在目标表中找到匹配，然后确定在下一步执行中应进入哪种类型（MATCHED或NOT MATCHED）的子句。
 
-![Alt text](@site/docs/public/img/sql/merge-into-single-clause.jpeg)
+![Alt text](/img/sql/merge-into-single-clause.jpeg)
 
-A MERGE statement usually contains a MATCHED and / or a NOT MATCHED clause, instructing Databend on how to handle matched and unmatched scenarios. For a MATCHED clause, you have the option to choose between performing an UPDATE or DELETE operation on the target table. Conversely, in the case of a NOT MATCHED clause, the available choice is INSERT.
+MERGE语句通常包含一个MATCHED和/或NOT MATCHED子句，指示Databend如何处理匹配和不匹配的情况。对于MATCHED子句，您可以选择对目标表执行UPDATE或DELETE操作。相反，对于NOT MATCHED子句，可用的选择是INSERT。
 
-## Multiple MATCHED & NOT MATCHED Clauses
+## 多个MATCHED & NOT MATCHED子句
 
-A MERGE statement can include multiple MATCHED and / or NOT MATCHED clauses, giving you the flexibility to specify different actions to be taken based on the conditions met during the MERGE operation.
+MERGE语句可以包含多个MATCHED和/或NOT MATCHED子句，使您能够根据MERGE操作中满足的条件指定不同的操作。
 
-![Alt text](@site/docs/public/img/sql/merge-into-multi-clause.jpeg)
+![Alt text](/img/sql/merge-into-multi-clause.jpeg)
 
-If a MERGE statement includes multiple MATCHED clauses, a condition needs to be specified for each clause EXCEPT the last one. These conditions determine the criteria under which the associated operations are executed. Databend evaluates the conditions in the specified order. Once a condition is met, it triggers the specified operation, skips any remaining MATCHED clauses, then moves on to the next row in the source. If the MERGE statement also includes multiple NOT MATCHED clauses, Databend handles them in a similar way.
+如果MERGE语句包含多个MATCHED子句，则需要为除最后一个子句外的每个子句指定条件。这些条件决定了相关操作的执行标准。Databend按指定顺序评估条件。一旦满足条件，它将触发指定的操作，跳过任何剩余的MATCHED子句，然后继续处理源中的下一行。如果MERGE语句还包含多个NOT MATCHED子句，Databend以类似的方式处理它们。
 
-:::note
-MERGE is currently in an experimental state. Before using the MERGE command, you need to run "SET enable_experimental_merge_into = 1;" to enable the feature.
-:::
-
-## Syntax
+## 语法
 
 ```sql
-MERGE INTO <target_table> 
+MERGE INTO <target_table>
     USING (SELECT ... ) [AS] <alias> ON <join_expr> { matchedClause | notMatchedClause } [ ... ]
 
 matchedClause ::=
-  WHEN MATCHED [ AND <condition> ] THEN 
-  { UPDATE SET <col_name> = <expr> [ , <col_name2> = <expr2> ... ] | UPDATE * | DELETE } 
+  WHEN MATCHED [ AND <condition> ] THEN
+  { UPDATE SET <col_name> = <expr> [ , <col_name2> = <expr2> ... ] | UPDATE * | DELETE }
 
 notMatchedClause ::=
-  WHEN NOT MATCHED [ AND <condition> ] THEN 
+  WHEN NOT MATCHED [ AND <condition> ] THEN
   { INSERT ( <col_name> [ , <col_name2> ... ] ) VALUES ( <expr> [ , ... ] ) | INSERT * }
 ```
 
-| Parameter | Description                                                                                                                                                                                                                                                                                                   |
-|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| UPDATE *  | Updates all columns of the matched row in the target table with values from the corresponding row in the source. This requires the column names between the source and target are consistent (though their order can be different) because during the update process, matching is done based on column names. |
-| INSERT *  | Inserts a new row into the target table with values from the source row.                                                                                                                                    |
+| 参数 | 描述                                                                                                                                                                                                                                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UPDATE \* | 使用源中相应行的值更新目标表中匹配行的所有列。这要求源和目标之间的列名一致（尽管它们的顺序可以不同），因为在更新过程中，匹配是基于列名进行的。 |
+| INSERT \* | 使用源行的值将新行插入目标表。                                                                                                                                                                                                                                      |
 
-## Output
+## 输出
 
-MERGE provides a summary of the data merge results with these columns:
+MERGE提供数据合并结果的摘要，包含以下列：
 
-| Column                   | Description                                           |
-| -------------------------| ----------------------------------------------------- |
-| number of rows inserted  | Count of new rows added to the target table.          |
-| number of rows updated   | Count of existing rows modified in the target table.  |
-| number of rows deleted   | Count of rows deleted from the target table.          |
+| 列 | 描述 |
+| ----------------------- | ---------------------------------------------------- |
+| number of rows inserted | 添加到目标表的新行数。 |
+| number of rows updated | 目标表中修改的现有行数。 |
+| number of rows deleted | 从目标表中删除的行数。 |
 
-## Examples
+## 示例
 
-### Example 1: Merge with Multiple Matched Clauses
+### 示例1: 带有多个MATCHED子句的合并
 
-This example uses MERGE to synchronize employee data from 'employees' into 'salaries', allowing for inserting and updating salary information based on specified criteria.
+此示例使用MERGE将员工数据从'employees'同步到'salaries'，根据指定标准插入和更新薪资信息。
 
 ```sql
--- Create the 'employees' table as the source for merging
+-- 创建'employees'表作为合并的源
 CREATE TABLE employees (
     employee_id INT,
     employee_name VARCHAR(255),
     department VARCHAR(255)
 );
 
--- Create the 'salaries' table as the target for merging
+-- 创建'salaries'表作为合并的目标
 CREATE TABLE salaries (
     employee_id INT,
     salary DECIMAL(10, 2)
 );
 
--- Insert initial employee data
+-- 插入初始员工数据
 INSERT INTO employees VALUES
     (1, 'Alice', 'HR'),
     (2, 'Bob', 'IT'),
     (3, 'Charlie', 'Finance'),
     (4, 'David', 'HR');
 
--- Insert initial salary data
+-- 插入初始薪资数据
 INSERT INTO salaries VALUES
     (1, 50000.00),
     (2, 60000.00);
 
--- Enable MERGE INTO
-SET enable_experimental_merge_into = 1;
+-- 启用MERGE INTO
 
--- Merge data into 'salaries' based on employee details from 'employees'
+-- 根据'employees'中的员工详情将数据合并到'salaries'
 MERGE INTO salaries
     USING (SELECT * FROM employees) AS employees
     ON salaries.employee_id = employees.employee_id
@@ -110,7 +106,7 @@ MERGE INTO salaries
 │                      2  │                      2 │
 └──────────────────────────────────────────────────┘
 
--- Retrieve all records from the 'salaries' table after merging
+-- 合并后从'salaries'表中检索所有记录
 SELECT * FROM salaries;
 
 ┌────────────────────────────────────────────┐
@@ -123,12 +119,12 @@ SELECT * FROM salaries;
 └────────────────────────────────────────────┘
 ```
 
-### Example 2: Merge with UPDATE \* & INSERT \*
+### 示例2: 带有UPDATE \* & INSERT \*的合并
 
-This example uses MERGE to synchronize data between the target_table and source_table, updating matching rows with values from the source and inserting non-matching rows.
+此示例使用MERGE在target_table和source_table之间同步数据，使用源中的值更新匹配行并插入不匹配的行。
 
 ```sql
--- Create the target table target_table
+-- 创建目标表target_table
 CREATE TABLE target_table (
     ID INT,
     Name VARCHAR(50),
@@ -136,14 +132,14 @@ CREATE TABLE target_table (
     City VARCHAR(50)
 );
 
--- Insert initial data into target_table
+-- 向target_table插入初始数据
 INSERT INTO target_table (ID, Name, Age, City)
 VALUES
     (1, 'Alice', 25, 'Toronto'),
     (2, 'Bob', 30, 'Vancouver'),
     (3, 'Carol', 28, 'Montreal');
 
--- Create the source table source_table
+-- 创建源表source_table
 CREATE TABLE source_table (
     ID INT,
     Name VARCHAR(50),
@@ -151,17 +147,16 @@ CREATE TABLE source_table (
     City VARCHAR(50)
 );
 
--- Insert initial data into source_table
+-- 向source_table插入初始数据
 INSERT INTO source_table (ID, Name, Age, City)
 VALUES
     (1, 'David', 27, 'Calgary'),
     (2, 'Emma', 29, 'Ottawa'),
     (4, 'Frank', 32, 'Edmonton');
 
--- Enable MERGE INTO
-SET enable_experimental_merge_into = 1;
+-- 启用MERGE INTO
 
--- Merge data from source_table into target_table
+-- 将source_table中的数据合并到target_table
 MERGE INTO target_table AS T
     USING (SELECT * FROM source_table) AS S
     ON T.ID = S.ID
@@ -176,7 +171,7 @@ MERGE INTO target_table AS T
 │                      1  │                      2 │
 └──────────────────────────────────────────────────┘
 
--- Retrieve all records from the 'target_table' after merging
+-- 合并后从'target_table'中检索所有记录
 SELECT * FROM target_table order by ID;
 
 ┌─────────────────────────────────────────────────────────────────────────┐

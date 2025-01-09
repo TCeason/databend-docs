@@ -3,56 +3,58 @@ title: UNDROP TABLE
 sidebar_position: 20
 ---
 
-Restores the recent version of a dropped table.
+恢复最近删除的表。此功能利用了 Databend 的时间回溯特性；删除的对象只能在保留期内（默认为 24 小时）恢复。
 
-**See also:**
+**另请参阅：**
 - [CREATE TABLE](./10-ddl-create-table.md)
 - [DROP TABLE](./20-ddl-drop-table.md)
 - [SHOW TABLES](show-tables.md)
 
-## Syntax
+## 语法
 
 ```sql
-UNDROP TABLE [db.]name
+UNDROP TABLE [ <database_name>. ]<table_name>
 ```
 
+- 如果已经存在同名的表，将返回错误。
 
-:::tip
-* If a table with the same name already exists, `UNDROP` will get the error: `ERROR 1105 (HY000): Code: 2308, Text = Undrop Table 'test' already exists.`
-* `UNDROP` relies on the Databend time travel feature, the table can be restored only within a retention period, default is 24 hours.
+    ```sql title='示例：'
+    root@localhost:8000/default> CREATE TABLE t(id INT);
+    processed in (0.036 sec)
 
-:::
+    root@localhost:8000/default> DROP TABLE t;
+    processed in (0.033 sec)
 
-## Examples
+    root@localhost:8000/default> CREATE TABLE t(id INT, name STRING);
+    processed in (0.030 sec)
+
+    root@localhost:8000/default> UNDROP TABLE t;
+    error: APIError: QueryFailed: [2308]Undrop Table 't' already exists
+    ```
+
+- 恢复表不会自动将所有权恢复到原始角色。恢复后，必须手动将所有权授予之前的角色或其他角色。在此之前，只有 `account-admin` 角色可以访问该表。
+
+    ```sql title='示例：'
+    GRNAT OWNERSHIP on doc.t to ROLE writer;
+    ```
+
+## 示例
 
 ```sql
 CREATE TABLE test(a INT, b VARCHAR);
 
--- insert data
-INSERT INTO test VALUES(1, 'a');
-
--- check
-SELECT * FROM test;
-+------+------+
-| a    | b    |
-+------+------+
-|    1 | a    |
-+------+------+
-
--- drop table
+-- 删除表
 DROP TABLE test;
 
-SELECT * FROM test;
-ERROR 1105 (HY000): Code: 1025, Text = Unknown table 'test'.
+-- 显示当前数据库中已删除的表
+SHOW TABLES HISTORY;
 
--- un-drop table
+┌────────────────────────────────────────────────────┐
+│ Tables_in_orders_2024 │          drop_time         │
+├───────────────────────┼────────────────────────────┤
+│ test                  │ 2024-01-23 04:56:34.766820 │
+└────────────────────────────────────────────────────┘
+
+-- 恢复表
 UNDROP TABLE test;
-
--- check
-SELECT * FROM test;
-+------+------+
-| a    | b    |
-+------+------+
-|    1 | a    |
-+------+------+
 ```

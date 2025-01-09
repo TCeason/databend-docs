@@ -3,18 +3,18 @@ title: DROP ROLE
 sidebar_position: 8
 ---
 
-Removes the specified role from the system.
+从系统中移除指定的角色。
 
-## Syntax
+## 语法
 
 ```sql
 DROP ROLE [ IF EXISTS ] <role_name>
 ```
 
-## Usage Notes
-* If a role is a grant to users, Databend can't drop the grants from the role automatically.
+## 使用说明
+* 如果某个角色已授予用户，Databend 无法自动从该角色中移除授权。
 
-## Examples
+## 示例
 
 ```sql
 DROP ROLE role1;

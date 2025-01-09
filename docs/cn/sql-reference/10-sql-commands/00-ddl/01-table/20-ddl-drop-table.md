@@ -4,33 +4,31 @@ sidebar_position: 19
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.155"/>
+<FunctionDescription description="引入或更新于：v1.2.155"/>
 
-Deletes a table.
+删除一个表。
 
-**See also:**
+**另请参阅：**
 
 - [CREATE TABLE](./10-ddl-create-table.md)
 - [UNDROP TABLE](./21-ddl-undrop-table.md)
 - [TRUNCATE TABLE](40-ddl-truncate-table.md)
 
-## Syntax
+## 语法
 
 ```sql
-DROP TABLE [IF EXISTS] [<database_name>.]<table_name> [ALL]
+DROP TABLE [ IF EXISTS ] [ <database_name>. ]<table_name>
 ```
 
-The optional "ALL" parameter determines whether the underlying data of the table is deleted. 
+该命令仅在元数据服务中将表模式标记为已删除，确保实际数据保持不变。如果需要恢复已删除的表模式，可以使用 [UNDROP TABLE](./21-ddl-undrop-table.md) 命令。
 
-- If "ALL" is omitted, only the table schema is deleted from the metadata service, leaving the data intact. In this case, you can potentially recover the table using the [UNDROP TABLE](./21-ddl-undrop-table.md) command.
+要完全删除表及其数据文件，请考虑使用 [VACUUM DROP TABLE](91-vacuum-drop-table.md) 命令。
 
-- Including "ALL" will result in the deletion of both the schema and the underlying data. While the [UNDROP TABLE](./21-ddl-undrop-table.md) command can recover the schema, it cannot restore the table's data.
+## 示例
 
-## Examples
+### 删除表
 
-### Example 1: Deleting a Table
-
-This example highlights the use of the DROP TABLE command to delete the "test" table. After dropping the table, any attempt to SELECT from it results in an "Unknown table" error. It also demonstrates how to recover the dropped "test" table using the UNDROP TABLE command, allowing you to SELECT data from it again.
+此示例展示了使用 DROP TABLE 命令删除 "test" 表的用法。删除表后，任何尝试从中 SELECT 的操作都会导致“未知表”错误。它还演示了如何使用 UNDROP TABLE 命令恢复已删除的 "test" 表，从而允许您再次从中 SELECT 数据。
 
 ```sql
 CREATE TABLE test(a INT, b VARCHAR);
@@ -41,7 +39,7 @@ a|b      |
 -+-------+
 1|example|
 
--- Delete the table
+-- 删除表
 DROP TABLE test;
 SELECT * FROM test;
 >> SQL Error [1105] [HY000]: UnknownTable. Code: 1025, Text = error: 
@@ -50,42 +48,11 @@ SELECT * FROM test;
 1 | /* ApplicationName=DBeaver 23.2.0 - SQLEditor <Script-12.sql> */ SELECT * FROM test
   |                                                                                ^^^^ Unknown table `default`.`test` in catalog 'default'
 
--- Recover the table
+-- 恢复表
 UNDROP TABLE test;
 SELECT * FROM test;
 
 a|b      |
 -+-------+
 1|example|
-```
-
-### Example 2: Deleting a Table with "ALL"
-
-This example emphasizes the use of the DROP TABLE command with the "ALL" parameter to delete the "test" table, including both its schema and underlying data. After using DROP TABLE with "ALL," the table is entirely removed. It also demonstrates how to recover the previously dropped "test" table using the UNDROP TABLE command. However, since the table's data was deleted, the subsequent SELECT statement shows an empty result.
-
-```sql
-CREATE TABLE test(a INT, b VARCHAR);
-INSERT INTO test (a, b) VALUES (1, 'example');
-SELECT * FROM test;
-
-a|b      |
--+-------+
-1|example|
-
--- Delete the table with the ALL parameter
-DROP TABLE test ALL;
-
--- Recover the table
-UNDROP TABLE test;
-SELECT * FROM test;
-
-a|b|
--+-+
-
-DESC test;
-
-Field|Type   |Null|Default|Extra|
------+-------+----+-------+-----+
-a    |INT    |YES |NULL   |     |
-b    |VARCHAR|YES |NULL   |     |
 ```

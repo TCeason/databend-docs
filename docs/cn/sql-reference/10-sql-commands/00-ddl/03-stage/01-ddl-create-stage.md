@@ -1,28 +1,31 @@
 ---
-title: CREATE STAGE
+title: 创建 STAGE
 sidebar_position: 1
 ---
+import FunctionDescription from '@site/src/components/FunctionDescription';
 
-Creates an internal or external stage.
+<FunctionDescription description="引入或更新版本：v1.2.339"/>
 
-## Syntax
+创建一个内部或外部 Stage。
+
+## 语法
 
 ```sql
--- Internal stage
-CREATE STAGE [ IF NOT EXISTS ] <internal_stage_name>
+-- 内部 Stage
+CREATE [ OR REPLACE ] STAGE [ IF NOT EXISTS ] <internal_stage_name>
   [ FILE_FORMAT = (
          FORMAT_NAME = '<your-custom-format>'
-         | TYPE = { CSV | TSV | NDJSON | PARQUET | XML } [ formatTypeOptions ]
+         | TYPE = { CSV | TSV | NDJSON | PARQUET | ORC } [ formatTypeOptions ]
        ) ]
   [ COPY_OPTIONS = ( copyOptions ) ]
   [ COMMENT = '<string_literal>' ]
 
--- External stage
+-- 外部 Stage
 CREATE STAGE [ IF NOT EXISTS ] <external_stage_name>
     externalStageParams
   [ FILE_FORMAT = (
          FORMAT_NAME = '<your-custom-format>'
-         | TYPE = { CSV | TSV | NDJSON | PARQUET | XML } [ formatTypeOptions ]
+         | TYPE = { CSV | TSV | NDJSON | PARQUET | ORC } [ formatTypeOptions ]
        ) ]
   [ COPY_OPTIONS = ( copyOptions ) ]
   [ COMMENT = '<string_literal>' ]
@@ -35,7 +38,7 @@ import TabItem from '@theme/TabItem';
 
 <Tabs groupId="externalstageparams">
 
-<TabItem value="Amazon S3-compatible Storage" label="Amazon S3-like Storage Services">
+<TabItem value="Amazon S3-compatible Storage" label="Amazon S3 兼容存储服务">
 
 ```sql
 externalStageParams ::=
@@ -45,10 +48,10 @@ externalStageParams ::=
   )
 ```
 
-For the connection parameters available for accessing Amazon S3-like storage services, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Amazon S3 兼容存储服务的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 
 :::note
-To create an external stage on Amazon S3, you can also use an IAM user account, enabling you to define fine-grained access controls for the stage, including specifying actions such as read or write access to specific S3 buckets. See [Example 3: Create External Stage with AWS IAM User](#example-3-create-external-stage-with-aws-iam-user).
+要在 Amazon S3 上创建外部 Stage，您还可以使用 IAM 用户账户，从而为 Stage 定义细粒度的访问控制，包括指定对特定 S3 存储桶的读取或写入等操作。请参见[示例 3：使用 AWS IAM 用户创建外部 Stage](#example-3-create-external-stage-with-aws-iam-user)。
 :::
 </TabItem>
 
@@ -62,7 +65,7 @@ externalStageParams ::=
   )
 ```
 
-For the connection parameters available for accessing Azure Blob Storage, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Azure Blob Storage 的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="Google Cloud Storage" label="Google Cloud Storage">
@@ -75,10 +78,10 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Google Cloud Storage, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Google Cloud Storage 的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
-<TabItem value="Alibaba Cloud OSS" label="Alibaba Cloud OSS">
+<TabItem value="Alibaba Cloud OSS" label="阿里云 OSS">
 
 ```sql
 externalLocation ::=
@@ -88,10 +91,10 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Alibaba Cloud OSS, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问阿里云 OSS 的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
-<TabItem value="Tencent Cloud Object Storage" label="Tencent Cloud Object Storage">
+<TabItem value="Tencent Cloud Object Storage" label="腾讯云对象存储">
 
 ```sql
 externalLocation ::=
@@ -101,7 +104,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Tencent Cloud Object Storage, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问腾讯云对象存储的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="HDFS" label="HDFS">
@@ -114,7 +117,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing HDFS, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 HDFS 的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="WebHDFS" label="WebHDFS">
@@ -127,13 +130,26 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing WebHDFS, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 WebHDFS 的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
+</TabItem>
+
+<TabItem value="Hugging Face" label="Hugging Face">
+
+```sql
+externalLocation ::=
+  "hf://<repo_id>[<path>]"
+  CONNECTION = (
+        <connection_parameters>
+  )
+```
+
+有关访问 Hugging Face 的连接参数，请参见[连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 </Tabs>
 
 ### FILE_FORMAT
 
-See [Input & Output File Formats](../../../00-sql-reference/50-file-format-options.md) for details.
+有关详细信息，请参见[输入输出文件格式](../../../00-sql-reference/50-file-format-options.md)。
 
 ### copyOptions
 
@@ -143,16 +159,16 @@ copyOptions ::=
   [ PURGE = <bool> ]
 ```
 
-| Parameters           | Description                                                                                                                   | Required |
-|----------------------|-------------------------------------------------------------------------------------------------------------------------------|----------|
-| `SIZE_LIMIT = <num>` | Number (> 0) that specifies the maximum rows of data to be loaded for a given COPY statement. Default `0`                     | Optional |
-| `PURGE = <bool>`     | True specifies that the command will purge the files in the stage if they are loaded successfully into table. Default `false` | Optional |
+| 参数               | 描述                                                                                                                   | 是否必填 |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------|----------|
+| `SIZE_LIMIT = <num>` | 指定单个 COPY 语句加载数据的最大行数（> 0）。默认值为 `0`                                                             | 可选     |
+| `PURGE = <bool>`     | 如果设置为 True，则在数据成功加载到表后，命令将清除 Stage 中的文件。默认值为 `false`                                   | 可选     |
 
-## Examples
+## 示例
 
-### Example 1: Create Internal Stage
+### 示例 1：创建内部 Stage
 
-This example creates an internal stage named *my_internal_stage*:
+此示例创建了一个名为 *my_internal_stage* 的内部 Stage：
 
 ```sql
 CREATE STAGE my_internal_stage;
@@ -165,9 +181,9 @@ my_internal_stage|Internal  |StageParams { storage: Fs(StorageFsConfig { root: "
 
 ```
 
-### Example 2: Create External Stage with AWS Access Key
+### 示例 2：使用 AWS 访问密钥创建外部 Stage
 
-This example creates an external stage named *my_s3_stage* on Amazon S3:
+此示例在 Amazon S3 上创建了一个名为 *my_s3_stage* 的外部 Stage：
 
 ```sql
 CREATE STAGE my_s3_stage URL='s3://load/files/' CONNECTION = (ACCESS_KEY_ID = '<your-access-key-id>' SECRET_ACCESS_KEY = '<your-secret-access-key>');
@@ -180,18 +196,18 @@ DESC STAGE my_s3_stage;
 +-------------+------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------+---------+
 ```
 
-### Example 3: Create External Stage with AWS IAM User
+### 示例 3：使用 AWS IAM 用户创建外部 Stage
 
-This example creates an external stage named *iam_external_stage* on Amazon S3 with an AWS Identity and Access Management (IAM) user.
+此示例使用 AWS Identity and Access Management (IAM) 用户在 Amazon S3 上创建了一个名为 *iam_external_stage* 的外部 Stage。
 
-#### Step 1: Create Access Policy for S3 Bucket
+#### 步骤 1：为 S3 存储桶创建访问策略
 
-The procedure below creates an access policy named *databend-access* for the bucket *databend-toronto* on Amazon S3:
+以下步骤为 Amazon S3 上的存储桶 *databend-toronto* 创建了一个名为 *databend-access* 的访问策略：
 
-1. Log into the AWS Management Console, then select **Services** > **Security, Identity, & Compliance** > **IAM**.
-2. Select **Account settings** in the left navigation pane, and go to the **Security Token Service (STS)** section on the right page. Make sure the status of AWS region where your account belongs is **Active**.
-3. Select **Policies** in the left navigation pane, then select **Create policy** on the right page.
-4. Click the **JSON** tab, copy and paste the following code to the editor, then save the policy as *databend_access*.
+1. 登录 AWS 管理控制台，然后选择 **Services** > **Security, Identity, & Compliance** > **IAM**。
+2. 在左侧导航栏中选择 **Account settings**，然后转到右侧页面的 **Security Token Service (STS)** 部分。确保您所属的 AWS 区域的状态为 **Active**。
+3. 在左侧导航栏中选择 **Policies**，然后在右侧页面中选择 **Create policy**。
+4. 点击 **JSON** 标签，将以下代码复制并粘贴到编辑器中，然后将策略保存为 *databend_access*。
 
 ```json
 {
@@ -217,50 +233,50 @@ The procedure below creates an access policy named *databend-access* for the buc
 }
 ```
 
-#### Step 2: Create IAM User
+#### 步骤 2：创建 IAM 用户
 
-The procedure below creates an IAM user named *databend* and attach the access policy *databend-access* to the user.
+以下步骤创建了一个名为 *databend* 的 IAM 用户，并将访问策略 *databend-access* 附加到该用户。
 
-1. Select **Users** in the left navigation pane, then select **Add users** on the right page.
-2. Configure the user:
-    - Set the user name to *databend*.
-    - When setting permissions for the user, click **Attach policies directly**, then search for and select the access policy *databend-access*.
-3. After the user is created, click the user name to open the details page and select the **Security credentials** tab.
-4. In the **Access keys** section, click **Create access key**.
-5. Select **Third-party service** for the use case, and tick the checkbox below to confirm creation of the access key.
-6. Copy and save the generated access key and secret access key to a safe place.
+1. 在左侧导航栏中选择 **Users**，然后在右侧页面中选择 **Add users**。
+2. 配置用户：
+    - 将用户名设置为 *databend*。
+    - 在为用户设置权限时，点击 **Attach policies directly**，然后搜索并选择访问策略 *databend-access*。
+3. 用户创建后，点击用户名打开详细信息页面，然后选择 **Security credentials** 标签。
+4. 在 **Access keys** 部分，点击 **Create access key**。
+5. 选择 **Third-party service** 作为用例，并勾选下方的复选框以确认创建访问密钥。
+6. 将生成的访问密钥和秘密访问密钥复制并保存到安全的地方。
 
-#### Step 3: Create External Stage
+#### 步骤 3：创建外部 Stage
 
-Use the access key and secret access key generated for the IAM user *databend* to create an external stage.
+使用为 IAM 用户 *databend* 生成的访问密钥和秘密访问密钥创建外部 Stage。
 
 ```sql
 CREATE STAGE iam_external_stage url = 's3://databend-toronto' CONNECTION =(aws_key_id='<your-access-key-id>' aws_secret_key='<your-secret-access-key>' region='us-east-2');
 ```
 
-### Example 4: Create External Stage on Cloudflare R2
+### 示例 4：在 Cloudflare R2 上创建外部 Stage
 
-[Cloudflare R2](https://www.cloudflare.com/en-ca/products/r2/) is an object storage service introduced by Cloudflare that is fully compatible with Amazon's AWS S3 service. This example creates an external stage named *r2_stage* on Cloudflare R2.
+[Cloudflare R2](https://www.cloudflare.com/en-ca/products/r2/) 是 Cloudflare 推出的对象存储服务，完全兼容 Amazon 的 AWS S3 服务。此示例在 Cloudflare R2 上创建了一个名为 *r2_stage* 的外部 Stage。
 
-#### Step 1: Create Bucket
+#### 步骤 1：创建存储桶
 
-The procedure below creates a bucket named *databend* on Cloudflare R2.
+以下步骤在 Cloudflare R2 上创建了一个名为 *databend* 的存储桶。
 
-1. Log into the Cloudflare dashboard, and select **R2** in the left navigation pane.
-2. Click **Create bucket** to create a bucket, and set the bucket name to *databend*. Once the bucket is successfully created, you can find the bucket endpoint right below the bucket name when you view the bucket details page.
+1. 登录 Cloudflare 仪表板，然后在左侧导航栏中选择 **R2**。
+2. 点击 **Create bucket** 创建存储桶，并将存储桶名称设置为 *databend*。存储桶成功创建后，您可以在查看存储桶详细信息页面时，在存储桶名称下方找到存储桶端点。
 
-#### Step 2: Create R2 API Token
+#### 步骤 2：创建 R2 API 令牌
 
-The procedure below creates an R2 API token that includes an Access Key ID and a Secret Access Key.
+以下步骤创建了一个包含 Access Key ID 和 Secret Access Key 的 R2 API 令牌。
 
-1. Click **Manage R2 API Tokens** on **R2** > **Overview**.
-2. Click **Create API token** to create an API token.
-3. When configuring the API token, select the necessary permission and set the **TTL** as needed.
-4. Click **Create API Token** to obtain the Access Key ID and Secret Access Key. Copy and save them to a safe place.
+1. 在 **R2** > **Overview** 中点击 **Manage R2 API Tokens**。
+2. 点击 **Create API token** 创建 API 令牌。
+3. 在配置 API 令牌时，选择必要的权限并根据需要设置 **TTL**。
+4. 点击 **Create API Token** 以获取 Access Key ID 和 Secret Access Key。将其复制并保存到安全的地方。
 
-#### Step 3: Create External Stage
+#### 步骤 3：创建外部 Stage
 
-Use the created Access Key ID and Secret Access Key to create an external stage named *r2_stage*.
+使用创建的 Access Key ID 和 Secret Access Key 创建名为 *r2_stage* 的外部 Stage。
 
 ```sql
 CREATE STAGE r2_stage

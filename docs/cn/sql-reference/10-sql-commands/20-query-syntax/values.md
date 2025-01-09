@@ -3,26 +3,26 @@ title: VALUES
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.65"/>
+<FunctionDescription description="引入或更新: v1.2.65"/>
 
-The VALUES clause is used to define a set of rows explicitly for use in queries. It allows you to provide a list of values that can be used as a temporary table in your SQL statements.
+VALUES 子句用于显式定义一组行以在查询中使用。它允许您提供一个值列表，可以在 SQL 语句中用作临时表。
 
-## Syntax
+## 语法
 
 ```sql
 VALUES (value_1_1, value_1_2, ...), (value_2_1, value_2_2, ...), ...
 ```
-- The VALUES clause is followed by sets of values enclosed in parentheses.
-- Each set of values represents a row to be inserted into the temporary table.
-- Within each set of values, the individual values are comma-separated and correspond to the columns of the temporary table.
-- Databend automatically assigns default column names like *col0*, *col1*, *col2*, and so on when you insert multiple rows without specifying column names.
+- VALUES 子句后跟一组用括号括起来的值。
+- 每组值表示要插入临时表的一行。
+- 在每组值中，各个值用逗号分隔，并对应于临时表的列。
+- 当您插入多行而不指定列名时，Databend 会自动分配像 *col0*、*col1*、*col2* 等默认列名。
 
-## Examples
+## 示例
 
-These examples demonstrate using the VALUES clause to show city data in various formats: directly, or ordered by population:
+这些示例展示了如何使用 VALUES 子句以各种格式显示城市数据：直接显示，或按人口排序：
 
 ```sql
--- Directly return data
+-- 直接返回数据
 VALUES ('Toronto', 2731571), ('Vancouver', 631486), ('Montreal', 1704694);
 
 col0     |col1   |
@@ -31,7 +31,7 @@ Toronto  |2731571|
 Vancouver| 631486|
 Montreal |1704694|
 
--- Order data
+-- 排序数据
 VALUES ('Toronto', 2731571), ('Vancouver', 631486), ('Montreal', 1704694) ORDER BY col1;
 
 col0     |col1   |
@@ -41,10 +41,10 @@ Montreal |1704694|
 Toronto  |2731571|
 ```
 
-These examples demonstrate how the VALUES clause can be used in a SELECT statement:
+这些示例展示了如何在 SELECT 语句中使用 VALUES 子句：
 
 ```sql
--- Select a single column
+-- 选择单列
 SELECT col1 
 FROM (VALUES ('Toronto', 2731571), ('Vancouver', 631486), ('Montreal', 1704694));
 
@@ -54,7 +54,7 @@ col1   |
  631486|
 1704694|
 
--- Select columns with aliases
+-- 选择带有别名的列
 SELECT * FROM (
     VALUES ('Toronto', 2731571), 
            ('Vancouver', 631486), 
@@ -67,7 +67,7 @@ Toronto  |   2731571|
 Vancouver|    631486|
 Montreal |   1704694|
 
--- Select columns with aliases and sorting
+-- 选择带有别名和排序的列
 SELECT col0 AS City, col1 AS Population
 FROM (VALUES ('Toronto', 2731571), ('Vancouver', 631486), ('Montreal', 1704694))
 ORDER BY col1 DESC
@@ -78,7 +78,7 @@ city   |population|
 Toronto|   2731571|
 ```
 
-This example demonstrates how to use the VALUES clause to create a temporary table within a Common Table Expression (CTE):
+此示例展示了如何在公用表表达式 (CTE) 中使用 VALUES 子句创建临时表：
 
 ```sql
 WITH citypopulation(city, population) AS (

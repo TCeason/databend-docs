@@ -3,27 +3,36 @@ title: SHOW CREATE TABLE
 sidebar_position: 10
 ---
 
-Shows the CREATE TABLE statement that creates the named table.
+显示指定表的 CREATE TABLE 语句。要在结果中包含 Fuse Engine 选项，请将 `hide_options_in_show_create_table` 设置为 `0`。
 
-## Syntax
+## 语法
 
 ```sql
-SHOW CREATE TABLE [database.]table_name
+SHOW CREATE TABLE [ <database_name>. ]<table_name>
 ```
 
-## Examples
+## 示例
 
-:::tip
-numbers(N) – A table for test with the single `number` column (UInt64) that contains integers from 0 to N-1.
-:::
+此示例展示了如何通过将 `hide_options_in_show_create_table` 设置为 `0` 来显示完整的 CREATE TABLE 语句，包括 Fuse Engine 选项：
 
 ```sql
-SHOW CREATE TABLE system.numbers;
-+---------+--------------------------------------------------------------------+
-| Table   | Create Table                                                       |
-+---------+--------------------------------------------------------------------+
-| numbers | CREATE TABLE `numbers` (
-  `number` UInt64,
-) ENGINE=SystemNumbers |
-+---------+--------------------------------------------------------------------+
+CREATE TABLE fuse_table (a int);
+
+SHOW CREATE TABLE fuse_table;
+
+-[ RECORD 1 ]-----------------------------------
+       Table: fuse_table
+Create Table: CREATE TABLE fuse_table (
+  a INT NULL
+) ENGINE=FUSE
+
+SET hide_options_in_show_create_table=0;
+
+SHOW CREATE TABLE fuse_table;
+
+-[ RECORD 1 ]-----------------------------------
+       Table: fuse_table
+Create Table: CREATE TABLE fuse_table (
+  a INT NULL
+) ENGINE=FUSE COMPRESSION='lz4' DATA_RETENTION_PERIOD_IN_HOURS='240' STORAGE_FORMAT='native'
 ```

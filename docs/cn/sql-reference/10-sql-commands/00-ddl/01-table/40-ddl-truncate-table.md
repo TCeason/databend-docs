@@ -3,17 +3,17 @@ title: TRUNCATE TABLE
 sidebar_position: 16
 ---
 
-Removes all data from a table while preserving the table's schema. It deletes all rows in the table, making it an empty table with the same columns and constraints. Please note that, it does not release the disk space allocated to the table.
+从表中删除所有数据，同时保留表的模式。它会删除表中的所有行，使其成为一个具有相同列和约束的空表。请注意，它不会释放分配给表的磁盘空间。
 
-See also: [DROP TABLE](20-ddl-drop-table.md)
+另请参阅：[DROP TABLE](20-ddl-drop-table.md)
 
-## Syntax
+## 语法
 
 ```sql
-TRUNCATE TABLE [db.]table_name
+TRUNCATE TABLE [ <database_name>. ]table_name
 ```
 
-## Examples
+## 示例
 
 ```sql
 root@localhost> CREATE TABLE test_truncate(a BIGINT UNSIGNED, b VARCHAR);

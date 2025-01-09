@@ -2,15 +2,15 @@
 title: EXPLAIN RAW
 ---
 
-Shows the logical execution plan of an SQL statement that you can use to analyze, troubleshoot, and improve the efficiency of your queries.
+显示SQL语句的逻辑执行计划，您可以使用它来分析、故障排除和提高查询效率。
 
-## Syntax
+## 语法
 
 ```sql
 EXPLAIN RAW <statement>
 ```
 
-## Examples
+## 示例
 
 ```sql
 explain raw select * from t1, t2 where (t1.a = t2.a and t1.a > 3) or (t1.a = t2.a);

@@ -1,18 +1,46 @@
 ---
-title: Connection Parameters
+title: 连接参数
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.148"/>
+<FunctionDescription description="引入或更新于：v1.2.294"/>
 
-The connection parameters refer to a set of essential connection details required for establishing a secure link to supported external storage services, like Amazon S3. These parameters are enclosed within parentheses and consists of key-value pairs separated by commas. It is commonly utilized in operations such as creating a stage, copying data into Databend, and querying staged files from external sources. The provided key-value pairs offer the necessary authentication and configuration information for the connection.
+连接参数是用于建立与外部存储服务（如 Amazon S3）的安全链接的键值对。这些参数对于创建 Stage、将数据复制到 Databend 以及查询外部文件等任务至关重要。
 
-### Syntax and Examples
+有关每种存储服务的具体连接详情，请参见下表。
 
-The connection parameters are specified using a CONNECTION clause and are separated by comma. When [Querying Staged Files](/guides/load-data/transform/querying-stage), the CONNECTION clause is enclosed in an additional set of parentheses.
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-```sql title='Examples:'
--- This example illustrates a 'CREATE STAGE' command where 'CONNECTION' is followed by '=', establishing a Minio stage with specific connection parameters.
+<Tabs groupId="operating-systems">
+<TabItem value="Amazon S3" label="Amazon S3">
+
+下表列出了访问 Amazon S3 类似存储服务的连接参数：
+
+| 参数                 	| 是否必填 	| 描述                                                  	|
+|---------------------------	|-----------	|--------------------------------------------------------------	|
+| endpoint_url              	| 是       	| Amazon S3 类似存储服务的端点 URL。             	|
+| access_key_id             	| 是       	| 用于标识请求者的访问密钥 ID。                 	|
+| secret_access_key         	| 是       	| 用于身份验证的密钥访问密钥。                        	|
+| enable_virtual_host_style 	| 否        	| 是否使用虚拟主机风格的 URL。默认为 *false*。 	|
+| master_key                	| 否        	| 用于高级数据加密的可选主密钥。            	|
+| region                    	| 否        	| 存储桶所在的 AWS 区域。                      	|
+| security_token            	| 否        	| 用于临时凭证的安全令牌。                    	|
+
+:::note
+- 如果命令中未指定 **endpoint_url** 参数，Databend 将默认在 Amazon S3 上创建 Stage。因此，当您在 S3 兼容的对象存储或其他对象存储解决方案上创建外部 Stage 时，请务必包含 **endpoint_url** 参数。
+
+- **region** 参数不是必需的，因为 Databend 可以自动检测区域信息。通常您不需要手动指定此参数的值。如果自动检测失败，Databend 将默认使用 'us-east-1' 作为区域。当使用 MinIO 部署 Databend 且未配置区域信息时，它将自动默认使用 'us-east-1'，并且这将正常工作。但是，如果您收到诸如“region is missing”或“The bucket you are trying to access requires a specific endpoint. Please direct all future requests to this particular endpoint”之类的错误消息，您需要确定您的区域名称并将其显式分配给 **region** 参数。
+:::
+
+```sql title='示例'
+CREATE STAGE my_s3_stage
+  's3://my-bucket'
+  CONNECTION = (
+    ACCESS_KEY_ID = '<your-ak>',
+    SECRET_ACCESS_KEY = '<your-sk>'
+  );
+  
 CREATE STAGE my_minio_stage
   's3://databend'
   CONNECTION = (
@@ -20,118 +48,177 @@ CREATE STAGE my_minio_stage
     ACCESS_KEY_ID = 'ROOTUSER',
     SECRET_ACCESS_KEY = 'CHANGEME123'
   );
-
--- This example showcases a 'COPY INTO' command, employing '=' after 'CONNECTION' to copy data, while also specifying file format details.
-COPY INTO mytable
-    FROM 's3://mybucket/data.csv'
-    CONNECTION = (
-        ACCESS_KEY_ID = '<your-access-key-ID>',
-        SECRET_ACCESS_KEY = '<your-secret-access-key>'
-    )
-    FILE_FORMAT = (
-        TYPE = CSV,
-        FIELD_DELIMITER = ',',
-        RECORD_DELIMITER = '\n',
-        SKIP_HEADER = 1
-    )
-    SIZE_LIMIT = 10;
-
--- This example uses a 'SELECT' statement to query staged files. 
--- 'CONNECTION' is followed by '=>' to access Minio data, and the connection clause is enclosed in an additional set of parentheses.
-SELECT * FROM 's3://testbucket/admin/data/parquet/tuple.parquet' 
-    (CONNECTION => (
-        ACCESS_KEY_ID = 'minioadmin', 
-        SECRET_ACCESS_KEY = 'minioadmin', 
-        ENDPOINT_URL = 'http://127.0.0.1:9900/'
-        )
-    );
 ```
 
-The connection parameters vary for different storage services based on their specific requirements and authentication mechanisms. For more information, please refer to the tables below.
 
-### Amazon S3-like Storage Services
+要访问您的 Amazon S3 存储桶，您还可以指定 AWS IAM 角色和外部 ID 进行身份验证。通过指定 AWS IAM 角色和外部 ID，您可以更精细地控制用户可以访问哪些 S3 存储桶。这意味着如果 IAM 角色仅被授予访问特定 S3 存储桶的权限，那么用户将只能访问这些存储桶。外部 ID 可以通过提供额外的验证层来进一步增强安全性。有关更多信息，请参见 https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html
 
-The following table lists connection parameters for accessing an Amazon S3-like storage service:
+下表列出了使用 AWS IAM 角色身份验证访问 Amazon S3 存储服务的连接参数：
 
-| Parameter                 	| Required? 	| Description                                                  	|
-|---------------------------	|-----------	|--------------------------------------------------------------	|
-| endpoint_url              	| Yes       	| Endpoint URL for Amazon S3-like storage service.             	|
-| access_key_id             	| Yes       	| Access key ID for identifying the requester.                 	|
-| secret_access_key         	| Yes       	| Secret access key for authentication.                        	|
-| enable_virtual_host_style 	| No        	| Whether to use virtual host-style URLs. Defaults to *false*. 	|
-| master_key                	| No        	| Optional master key for advanced data encryption.            	|
-| region                    	| No        	| AWS region where the bucket is located.                      	|
-| security_token            	| No        	| Security token for temporary credentials.                    	|
-
-:::note
-- If the **endpoint_url** parameter is not specified in the command, Databend will create the stage on Amazon S3 by default. Therefore, when you create an external stage on an S3-compatible object storage or other object storage solutions, be sure to include the **endpoint_url** parameter.
-
-- The **region** parameter is not required because Databend can automatically detect the region information. You typically don't need to manually specify a value for this parameter. In case automatic detection fails, Databend will default to using 'us-east-1' as the region. When deploying Databend with MinIO and not configuring the region information, it will automatically default to using 'us-east-1', and this will work correctly. However, if you receive error messages such as "region is missing" or "The bucket you are trying to access requires a specific endpoint. Please direct all future requests to this particular endpoint", you need to determine your region name and explicitly assign it to the **region** parameter.
-:::
-
-To access your Amazon S3 buckets, you can also specify an AWS IAM role and external ID for authentication. By specifying an AWS IAM role and external ID, you can provide more granular control over which S3 buckets a user can access. This means that if the IAM role has been granted permissions to access only specific S3 buckets, then the user will only be able to access those buckets. An external ID can further enhance security by providing an additional layer of verification. For more information, see https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html
-
-The following table lists connection parameters for accessing Amazon S3 storage service using AWS IAM role authentication:
-
-| Parameter    	| Required? 	| Description                                           	|
+| 参数    	| 是否必填 	| 描述                                           	|
 |--------------	|-----------	|-------------------------------------------------------	|
-| endpoint_url 	| No        	| Endpoint URL for Amazon S3.                           	|
-| role_arn     	| Yes       	| ARN of the AWS IAM role for authorization to S3.      	|
-| external_id  	| No        	| External ID for enhanced security in role assumption. 	|
+| endpoint_url 	| 否        	| Amazon S3 的端点 URL。                           	|
+| role_arn     	| 是       	| 用于授权访问 S3 的 AWS IAM 角色的 ARN。      	|
+| external_id  	| 否        	| 用于角色假设中增强安全性的外部 ID。 	|
 
-### Azure Blob Storage
+```sql title='示例'
+CREATE STAGE my_s3_stage
+  's3://my-bucket'
+  CONNECTION = (
+    ROLE_ARN = 'arn:aws:iam::123456789012:role/my-role',
+    EXTERNAL_ID = 'my-external-id'
+  );
+```
 
-The following table lists connection parameters for accessing Azure Blob Storage:
+</TabItem>
 
-| Parameter    	| Required? 	| Description                                         	|
-|--------------	|-----------	|-----------------------------------------------------	|
-| endpoint_url 	| Yes       	| Endpoint URL for Azure Blob Storage.                	|
-| account_key  	| Yes       	| Azure Blob Storage account key for authentication.  	|
-| account_name 	| Yes       	| Azure Blob Storage account name for identification. 	|
+<TabItem value="Azure Blob" label="Azure Blob">
 
-### Google Cloud Storage
+下表列出了访问 Azure Blob Storage 的连接参数：
 
-The following table lists connection parameters for accessing Google Cloud Storage:
+| 参数    	 | 是否必填 	 | 描述                                         	 |
+|----------------|-------------|-------------------------------------------------------|
+| endpoint_url 	 | 是       	 | Azure Blob Storage 的端点 URL。                	 |
+| account_key  	 | 是       	 | 用于身份验证的 Azure Blob Storage 账户密钥。  	 |
+| account_name 	 | 是       	 | 用于标识的 Azure Blob Storage 账户名称。 	 |
 
-| Parameter    	| Required? 	| Description                                         	|
-|--------------	|-----------	|-----------------------------------------------------	|
-| endpoint_url 	| Yes       	| Endpoint URL for Google Cloud Storage.              	|
-| credential   	| Yes       	| Google Cloud Storage credential for authentication. 	|
+```sql title='示例'
+CREATE STAGE my_azure_stage
+  'azblob://my-container'
+  CONNECTION = (
+    ACCOUNT_NAME = 'myaccount',
+    ACCOUNT_KEY = 'myaccountkey',
+    ENDPOINT_URL = 'https://<your-storage-account-name>.blob.core.windows.net'
+  );
+```
 
-### Alibaba Cloud OSS
+</TabItem>
 
-The following table lists connection parameters for accessing Alibaba Cloud OSS:
+<TabItem value="Google GCS" label="Google GCS">
 
-| Parameter            	| Required? 	| Description                                             	|
+下表列出了访问 Google Cloud Storage 的连接参数：
+
+| 参数    	 | 是否必填 	 | 描述                                         	 |
+|----------------|-------------|-------------------------------------------------------|
+| credential   	 | 是       	 | 用于身份验证的 Google Cloud Storage 凭证。 	 |
+
+要获取 `credential`，您可以按照 Google 文档中的主题 [创建服务账户密钥](https://cloud.google.com/iam/docs/keys-create-delete#creating) 创建并下载服务账户密钥文件。下载服务账户密钥文件后，您可以通过以下命令将其转换为 base64 字符串：
+
+```
+base64 -i -o ~/Desktop/base64-encoded-key.txt
+```
+
+```sql title='示例'
+CREATE STAGE my_gcs_stage
+  'gcs://my-bucket'
+  CONNECTION = (
+    CREDENTIAL = '<your-base64-encoded-credential>'
+  );
+```
+
+</TabItem>
+
+<TabItem value="Alibaba OSS" label="阿里云 OSS">
+
+下表列出了访问阿里云 OSS 的连接参数：
+
+| 参数            	| 是否必填 	| 描述                                             	|
 |----------------------	|-----------	|---------------------------------------------------------	|
-| access_key_id        	| Yes       	| Alibaba Cloud OSS access key ID for authentication.     	|
-| access_key_secret    	| Yes       	| Alibaba Cloud OSS access key secret for authentication. 	|
-| endpoint_url         	| Yes       	| Endpoint URL for Alibaba Cloud OSS.                     	|
-| presign_endpoint_url 	| No        	| Endpoint URL for presigning Alibaba Cloud OSS URLs.     	|
+| access_key_id        	| 是       	| 用于身份验证的阿里云 OSS 访问密钥 ID。     	|
+| access_key_secret    	| 是       	| 用于身份验证的阿里云 OSS 访问密钥。 	|
+| endpoint_url         	| 是       	| 阿里云 OSS 的端点 URL。                     	|
+| presign_endpoint_url 	| 否        	| 用于预签名阿里云 OSS URL 的端点 URL。     	|
 
-### Tencent Cloud Object Storage
+```sql title='示例'
+CREATE STAGE my_oss_stage
+  'oss://my-bucket'
+  CONNECTION = (
+    ACCESS_KEY_ID = '<your-ak>',
+    ACCESS_KEY_SECRET = '<your-sk>',
+    ENDPOINT_URL = 'https://<bucket-name>.<region-id>[-internal].aliyuncs.com'
+  );
+```
 
-The following table lists connection parameters for accessing Tencent Cloud Object Storage (COS):
+</TabItem>
 
-| Parameter    	| Required? 	| Description                                                 	|
+<TabItem value="Tencent COS" label="腾讯云 COS">
+
+下表列出了访问腾讯云对象存储 (COS) 的连接参数：
+
+| 参数    	| 是否必填 	| 描述                                                 	|
 |--------------	|-----------	|-------------------------------------------------------------	|
-| endpoint_url 	| Yes       	| Endpoint URL for Tencent Cloud Object Storage.              	|
-| secret_id    	| Yes       	| Tencent Cloud Object Storage secret ID for authentication.  	|
-| secret_key   	| Yes       	| Tencent Cloud Object Storage secret key for authentication. 	|
+| endpoint_url 	| 是       	| 腾讯云对象存储的端点 URL。              	|
+| secret_id    	| 是       	| 用于身份验证的腾讯云对象存储密钥 ID。  	|
+| secret_key   	| 是       	| 用于身份验证的腾讯云对象存储密钥。 	|
 
-### HDFS
+```sql title='示例'
+CREATE STAGE my_cos_stage
+  'cos://my-bucket'
+  CONNECTION = (
+    SECRET_ID = '<your-secret-id>',
+    SECRET_KEY = '<your-secret-key>',
+    ENDPOINT_URL = '<your-endpoint-url>'
+  );
+```
 
-The following table lists connection parameters for accessing Hadoop Distributed File System (HDFS):
+</TabItem>
 
-| Parameter 	| Required? 	| Description                                          	|
+<TabItem value="HDFS" label="HDFS">
+
+下表列出了访问 Hadoop 分布式文件系统 (HDFS) 的连接参数：
+
+| 参数 	| 是否必填 	| 描述                                          	|
 |-----------	|-----------	|------------------------------------------------------	|
-| name_node 	| Yes       	| HDFS NameNode address for connecting to the cluster. 	|
+| name_node 	| 是       	| 用于连接到集群的 HDFS NameNode 地址。 	|
 
-### WebHDFS
+```sql title='示例'
+CREATE STAGE my_hdfs_stage
+  'hdfs://my-bucket'
+  CONNECTION = (
+    NAME_NODE = 'hdfs://<namenode-host>:<port>'
+  );
+```
 
-The following table lists connection parameters for accessing WebHDFS:
+</TabItem>
 
-| Parameter    	| Required? 	| Description                                       	|
+<TabItem value="WebHDFS" label="WebHDFS">
+
+下表列出了访问 WebHDFS 的连接参数：
+
+| 参数    	| 是否必填 	| 描述                                       	|
 |--------------	|-----------	|---------------------------------------------------	|
-| endpoint_url 	| Yes       	| Endpoint URL for WebHDFS.                         	|
-| delegation   	| No        	| Delegation token for accessing WebHDFS.           	|
+| endpoint_url 	| 是       	| WebHDFS 的端点 URL。                         	|
+| delegation   	| 否        	| 用于访问 WebHDFS 的委托令牌。           	|
+
+```sql title='示例'
+CREATE STAGE my_webhdfs_stage
+  'webhdfs://my-bucket'
+  CONNECTION = (
+    ENDPOINT_URL = 'http://<namenode-host>:<port>'
+  );
+```
+
+</TabItem>
+
+<TabItem value="Hugging Face" label="HuggingFace">
+
+下表列出了访问 Hugging Face 的连接参数：
+
+| 参数 | 是否必填             | 描述                                                                                                     |
+|-----------|-----------------------|-----------------------------------------------------------------------------------------------------------------|
+| repo_type | 否 (默认: dataset) | Hugging Face 仓库的类型。可以是 `dataset` 或 `model`。                                           |
+| revision  | 否 (默认: main)    | Hugging Face URI 的修订版本。可以是仓库的分支、标签或提交。                     |
+| token     | 否                    | 来自 Hugging Face 的 API 令牌，可能需要用于访问私有仓库或某些资源。 |
+
+```sql title='示例'
+CREATE STAGE my_huggingface_stage
+  'hf://opendal/huggingface-testdata/'
+  CONNECTION = (
+    REPO_TYPE = 'dataset'
+    REVISION = 'main'
+  );
+```
+
+</TabItem>
+
+</Tabs>

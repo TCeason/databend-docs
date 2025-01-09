@@ -3,95 +3,78 @@ title: ANALYZE TABLE
 sidebar_position: 7
 ---
 
-The objective of analyzing a table in Databend is to calculate table statistics, such as a distinct number of columns.
+计算表的各种统计信息。该命令在执行后不会显示结果。要显示结果，请使用函数 [FUSE_STATISTIC](../../../20-sql-functions/16-system-functions/fuse_statistic.md)。
 
-## What is Table statistic file?
+Databend 将每个表的统计信息保存为一个以 UUID（32 位小写十六进制字符串）命名的 JSON 文件，并将这些文件存储在对象存储中的路径 `<bucket_name>/[root]/<db_id>/<table_id>/` 下。
 
-A table statistic file is a JSON file that saves table statistic data, such as distinct values of table column.
+## 语法
 
-Databend creates a unique ID for each database and table for storing the table statistic file and saves them to your object storage in the path `<bucket_name>/[root]/<db_id>/<table_id>/`. Each table statistic file is named with a UUID (32-character lowercase hexadecimal string).
-
-| File            | Format | Filename                     | Storage Folder                                 |
-|-----------------|--------|------------------------------|------------------------------------------------|
-| Table statistic | JSON   | `<32bitUUID>_<version>.json` | `<bucket_name>/[root]/<db_id>/<table_id>/_ts/` |
-
-## Syntax
 ```sql
-ANALYZE TABLE [database.]table_name
+ANALYZE TABLE [ <database_name>. ]<table_name>
 ```
 
-- `ANALYZE TABLE <table_name>`
+- 该命令不会通过比较值来识别不同的值，而是通过计算存储段和块的数量来识别。这可能导致估计结果与实际值之间存在显著差异，例如，多个块持有相同的值。在这种情况下，Databend 建议在运行估计之前压缩存储段和块，尽可能合并它们。
+- 在执行更新/删除/替换语句后，快照级别的列统计信息可能会被放大。您可以通过执行 analyze 语句来校正列统计信息。
 
-    Estimates the number of distinct values of each column in a table, and recalculate the column statistics in snapshot.
+## 示例
 
-    - It does not display the estimated results after execution. To show the estimated results, use the function [FUSE_STATISTIC](../../../20-sql-functions/16-system-functions/fuse_statistic.md).
-    - The command does not identify distinct values by comparing them but by counting the number of storage segments and blocks. This might lead to a significant difference between the estimated results and the actual value, for example, multiple blocks holding the same value. In this case, Databend recommends compacting the storage segments and blocks to merge them as much as possible before you run the estimation.
-    - The column statistics at the snapshot level may be amplified after execute update/delete/replace statements. You can correct the column statistics by performing analyze statement.
-
-## Examples
-
-This example estimates the number of distinct values for each column in a table and shows the results with the function FUSE_STATISTIC:
+此示例估计表中每列的不同值的数量，并使用函数 [FUSE_STATISTIC](/sql/sql-functions/system-functions/fuse_statistic) 显示结果：
 
 ```sql
-create table t(a uint64);
+CREATE TABLE sample (
+    user_id INT,
+    name VARCHAR(50),
+    age INT
+);
 
-insert into t values (5);
-insert into t values (6);
-insert into t values (7);
+INSERT INTO sample (user_id, name, age) VALUES
+(1, 'Alice', 30),
+(2, 'Bob', 25),
+(3, 'Charlie', 35),
+(4, 'Diana', 28),
+(5, 'Eve', 28);
 
-select * from t order by a;
+SET enable_analyze_histogram = 1;
 
-----
-5
-6
-7
+-- 在运行 ANALYZE TABLE 进行估计之前，FUSE_STATISTIC 不会返回任何结果。
+SELECT * FROM FUSE_STATISTIC('default', 'sample');
 
--- FUSE_STATISTIC will not return any results until you run an estimation with OPTIMIZE TABLE.
-select * from fuse_statistic('db_09_0020', 't');
+ANALYZE TABLE sample;
 
-analyze table `t`;
+SELECT * FROM FUSE_STATISTIC('default', 'sample');
 
-select * from fuse_statistic('db_09_0020', 't');
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ column_name │ distinct_count │                                                                                                                                                               histogram                                                                                                                                                              │
+├─────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ age         │              4 │ [bucket id: 0, min: "25", max: "25", ndv: 1.0, count: 1.0], [bucket id: 1, min: "28", max: "28", ndv: 1.0, count: 1.0], [bucket id: 2, min: "28", max: "28", ndv: 1.0, count: 1.0], [bucket id: 3, min: "30", max: "30", ndv: 1.0, count: 1.0], [bucket id: 4, min: "35", max: "35", ndv: 1.0, count: 1.0]                           │
+│ user_id     │              5 │ [bucket id: 0, min: "1", max: "1", ndv: 1.0, count: 1.0], [bucket id: 1, min: "2", max: "2", ndv: 1.0, count: 1.0], [bucket id: 2, min: "3", max: "3", ndv: 1.0, count: 1.0], [bucket id: 3, min: "4", max: "4", ndv: 1.0, count: 1.0], [bucket id: 4, min: "5", max: "5", ndv: 1.0, count: 1.0]                                     │
+│ name        │              5 │ [bucket id: 0, min: "Alice", max: "Alice", ndv: 1.0, count: 1.0], [bucket id: 1, min: "Bob", max: "Bob", ndv: 1.0, count: 1.0], [bucket id: 2, min: "Charlie", max: "Charlie", ndv: 1.0, count: 1.0], [bucket id: 3, min: "Diana", max: "Diana", ndv: 1.0, count: 1.0], [bucket id: 4, min: "Eve", max: "Eve", ndv: 1.0, count: 1.0] │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-----
-(0,3);
+INSERT INTO sample (user_id, name, age) VALUES
+(6, 'Frank', 40);
 
+-- FUSE_STATISTIC 返回您上次估计的结果。要获取最新的估计值，请再次运行 ANALYZE TABLE。
+SELECT * FROM FUSE_STATISTIC('default', 'sample');
 
-insert into t values (5);
-insert into t values (6);
-insert into t values (7);
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ column_name │ distinct_count │                                                                                                                                                               histogram                                                                                                                                                              │
+├─────────────┼────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ age         │              4 │ [bucket id: 0, min: "25", max: "25", ndv: 1.0, count: 1.0], [bucket id: 1, min: "28", max: "28", ndv: 1.0, count: 1.0], [bucket id: 2, min: "28", max: "28", ndv: 1.0, count: 1.0], [bucket id: 3, min: "30", max: "30", ndv: 1.0, count: 1.0], [bucket id: 4, min: "35", max: "35", ndv: 1.0, count: 1.0]                           │
+│ user_id     │              5 │ [bucket id: 0, min: "1", max: "1", ndv: 1.0, count: 1.0], [bucket id: 1, min: "2", max: "2", ndv: 1.0, count: 1.0], [bucket id: 2, min: "3", max: "3", ndv: 1.0, count: 1.0], [bucket id: 3, min: "4", max: "4", ndv: 1.0, count: 1.0], [bucket id: 4, min: "5", max: "5", ndv: 1.0, count: 1.0]                                     │
+│ name        │              5 │ [bucket id: 0, min: "Alice", max: "Alice", ndv: 1.0, count: 1.0], [bucket id: 1, min: "Bob", max: "Bob", ndv: 1.0, count: 1.0], [bucket id: 2, min: "Charlie", max: "Charlie", ndv: 1.0, count: 1.0], [bucket id: 3, min: "Diana", max: "Diana", ndv: 1.0, count: 1.0], [bucket id: 4, min: "Eve", max: "Eve", ndv: 1.0, count: 1.0] │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
-select * from t order by a;
+ANALYZE TABLE sample;
 
-----
-5
-5
-6
-6
-7
-7
+SELECT * FROM FUSE_STATISTIC('default', 'sample');
+```
 
--- FUSE_STATISTIC returns results of your last estimation. To get the most recent estimated values, run the estimation again.
--- OPTIMIZE TABLE does not identify distinct values by comparing them but by counting the number of storage segments and blocks.
-select * from fuse_statistic('db_09_0020', 't');
-
-----
-(0,3);
-
-analyze table `t`;
-
-select * from fuse_statistic('db_09_0020', 't');
-
-----
-(0,6);
-
--- Best practice: Compact the table before running the estimation.
-optimize table t compact;
-
-analyze table `t`;
-
-select * from fuse_statistic('db_09_0020', 't');
-
-----
-(0,3);
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 列名       │ 不同值数量      |                                                                                                                                                                                                直方图                                                                                                                                                                                                 │
+├─────────────┼────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ name        │              6 │ [bucket id: 0, min: "Alice", max: "Alice", ndv: 1.0, count: 1.0], [bucket id: 1, min: "Bob", max: "Bob", ndv: 1.0, count: 1.0], [bucket id: 2, min: "Charlie", max: "Charlie", ndv: 1.0, count: 1.0], [bucket id: 3, min: "Diana", max: "Diana", ndv: 1.0, count: 1.0], [bucket id: 4, min: "Eve", max: "Eve", ndv: 1.0, count: 1.0], [bucket id: 5, min: "Frank", max: "Frank", ndv: 1.0, count: 1.0] │
+│ age         │              5 │ [bucket id: 0, min: "25", max: "25", ndv: 1.0, count: 1.0], [bucket id: 1, min: "28", max: "28", ndv: 1.0, count: 1.0], [bucket id: 2, min: "28", max: "28", ndv: 1.0, count: 1.0], [bucket id: 3, min: "30", max: "30", ndv: 1.0, count: 1.0], [bucket id: 4, min: "35", max: "35", ndv: 1.0, count: 1.0], [bucket id: 5, min: "40", max: "40", ndv: 1.0, count: 1.0]                                 │
+│ user_id     │              6 │ [bucket id: 0, min: "1", max: "1", ndv: 1.0, count: 1.0], [bucket id: 1, min: "2", max: "2", ndv: 1.0, count: 1.0], [bucket id: 2, min: "3", max: "3", ndv: 1.0, count: 1.0], [bucket id: 3, min: "4", max: "4", ndv: 1.0, count: 1.0], [bucket id: 4, min: "5", max: "5", ndv: 1.0, count: 1.0], [bucket id: 5, min: "6", max: "6", ndv: 1.0, count: 1.0]                                             │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```

@@ -3,18 +3,19 @@ title: SELECT
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.234"/>
+<FunctionDescription description="引入或更新: v1.2.435"/>
 
 import DetailsWrap from '@site/src/components/DetailsWrap';
 
-Retrieves data from a table.
+从表中检索数据。
 
-## Syntax
+## 语法
 
 ```sql
 [WITH]
 SELECT
     [ALL | DISTINCT]
+    [ TOP <n> ]
     <select_expr> | <col_name> [[AS] <alias>] | $<col_position> [, ...] |  
     COLUMNS <expr>
     [EXCLUDE (<col_name1> [, <col_name2>, <col_name3>, ...] ) ]
@@ -30,12 +31,11 @@ SELECT
     [OFFSET <row_count>]
     [IGNORE_RESULT]
 ```
+- SELECT 语句还允许您直接查询暂存文件。有关语法和示例，请参阅 [使用 Databend 高效数据转换](/guides/load-data/transform/querying-stage)。
 
-:::tip
-numbers(N) – A table for test with the single `number` column (UInt64) that contains integers from 0 to N-1.
-:::
+- 在本页的示例中，使用表 `numbers(N)` 进行测试，该表包含一个名为 `number` 的 UInt64 列，包含从 0 到 N-1 的整数。
 
-## SELECT Clause
+## SELECT 子句
 
 ```sql
 SELECT number FROM numbers(3);
@@ -48,13 +48,13 @@ SELECT number FROM numbers(3);
 +--------+
 ```
 
-### AS Keyword 
+### AS 关键字
 
-In Databend, you can use the AS keyword to assign an alias to a column. This allows you to provide a more descriptive and easily understandable name for the column in both the SQL statement and the query result:
+在 Databend 中，您可以使用 AS 关键字为列分配别名。这允许您在 SQL 语句和查询结果中为列提供更具描述性和易于理解的名称：
 
-- Databend suggests avoiding special characters as much as possible when creating column aliases. However, if special characters are necessary in some cases, the alias should be enclosed in backticks, like this: SELECT price AS \`$CA\` FROM ...
+- Databend 建议尽量避免在创建列别名时使用特殊字符。然而，在某些情况下如果需要特殊字符，别名应使用反引号括起来，例如：SELECT price AS \`$CA\` FROM ...
 
-- Databend will automatically convert aliases into lowercase. For example, if you alias a column as *Total*, it will appear as *total* in the result. If the capitalization matters to you, enclose the alias in backticks: \`Total\`.
+- Databend 会自动将别名转换为小写。例如，如果您将列别名为 *Total*，它将在结果中显示为 *total*。如果大小写对您很重要，请使用反引号括起别名：\`Total\`。
 
 ```sql
 SELECT number AS Total FROM numbers(3);
@@ -76,7 +76,7 @@ SELECT number AS `Total` FROM numbers(3);
 +--------+
 ```
 
-If you alias a column in the SELECT clause, you can refer to the alias in the WHERE, GROUP BY, and HAVING clauses, as well as in the SELECT clause itself after the alias is defined.
+如果您在 SELECT 子句中为列分配别名，您可以在 WHERE、GROUP BY 和 HAVING 子句中引用该别名，以及在别名定义后的 SELECT 子句本身中引用。
 
 ```sql
 SELECT number * 2 AS a, a * 2 AS double FROM numbers(3) WHERE (a + 1) % 3 = 0;
@@ -96,7 +96,7 @@ SELECT MAX(number) AS b, number % 3 AS c FROM numbers(100) GROUP BY c HAVING b >
 +----+---+
 ```
 
-If you assign an alias to a column and the alias name is the same as the column name, the WHERE and GROUP BY clauses will recognize the alias as the column name. However, the HAVING clause will recognize the alias as the alias itself.
+如果您为列分配别名并且别名名称与列名相同，WHERE 和 GROUP BY 子句将识别别名为列名。然而，HAVING 子句将识别别名为别名本身。
 
 ```sql
 SELECT number * 2 AS number FROM numbers(3)
@@ -112,9 +112,9 @@ HAVING number > 5;
 +--------+
 ```
 
-### EXCLUDE Keyword
+### EXCLUDE 关键字
 
-Excludes one or more columns by their names from the result. The keyword is usually used in conjunction with `SELECT * ...` to exclude a few columns from the result instead of retrieving them all.
+通过名称从结果中排除一个或多个列。该关键字通常与 `SELECT * ...` 一起使用，以从结果中排除几列而不是检索所有列。
 
 ```sql
 SELECT * FROM allemployees ORDER BY id;
@@ -128,7 +128,7 @@ SELECT * FROM allemployees ORDER BY id;
 | 4  | Lily      | McMeant   | F     |
 | 5  | Macy      | Lee      | F      |
 
--- Exclude the column "id" from the result
+-- 从结果中排除列 "id"
 SELECT * EXCLUDE id FROM allemployees;
 
 ---
@@ -140,7 +140,7 @@ SELECT * EXCLUDE id FROM allemployees;
 | Lily      | McMeant   | F     |
 | Macy      | Lee      | F      |
 
--- Exclude the columns "id" and "lastname" from the result
+-- 从结果中排除列 "id" 和 "lastname"
 SELECT * EXCLUDE (id,lastname) FROM allemployees;
 
 ---
@@ -155,7 +155,7 @@ SELECT * EXCLUDE (id,lastname) FROM allemployees;
 
 ### COLUMNS
 
-The COLUMNS keyword provides a flexible mechanism for column selection based on literal regular expression patterns and lambda expressions.
+COLUMNS 关键字提供了一种基于字面正则表达式模式和 lambda 表达式的灵活列选择机制。
 
 ```sql
 CREATE TABLE employee (
@@ -172,7 +172,7 @@ INSERT INTO employee VALUES
 (4, 'David', 'Finance', 80000.00);
 
 
--- Select columns with names starting with 'employee'
+-- 选择名称以 'employee' 开头的列
 SELECT COLUMNS('employee.*') FROM employee;
 
 ┌────────────────────────────────────┐
@@ -184,7 +184,7 @@ SELECT COLUMNS('employee.*') FROM employee;
 │               4 │ David            │
 └────────────────────────────────────┘
 
--- Select columns where the name contains the substring 'name'
+-- 选择名称包含子字符串 'name' 的列
 SELECT COLUMNS(x -> x LIKE '%name%') FROM employee;
 
 ┌──────────────────┐
@@ -197,10 +197,10 @@ SELECT COLUMNS(x -> x LIKE '%name%') FROM employee;
 └──────────────────┘
 ```
 
-The COLUMNS keyword can also be utilized with EXCLUDE to explicitly exclude specific columns from the query result.
+COLUMNS 关键字还可以与 EXCLUDE 一起使用，以显式排除查询结果中的特定列。
 
 ```sql
--- Select all columns excluding 'salary' from the 'employee' table
+-- 从 'employee' 表中选择所有列，排除 'salary'
 SELECT COLUMNS(* EXCLUDE salary) FROM employee;
 
 ┌───────────────────────────────────────────────────────┐
@@ -213,9 +213,9 @@ SELECT COLUMNS(* EXCLUDE salary) FROM employee;
 └───────────────────────────────────────────────────────┘
 ```
 
-### Column Position
+### 列位置
 
-By using $N, you can represent a column within the SELECT clause. For example, $2 represents the second column:
+通过使用 $N，您可以在 SELECT 子句中表示一列。例如，$2 表示第二列：
 
 ```sql
 CREATE TABLE IF NOT EXISTS t1(a int, b varchar);
@@ -230,17 +230,17 @@ SELECT a, $2 FROM t1;
 +---+-------+
 ```
 
-## FROM Clause
+## FROM 子句
 
-The FROM clause in a SELECT statement specifies the source table or tables from which data will be queried. You can also improve code readability by placing the FROM clause before the SELECT clause, especially when managing a lengthy SELECT list or aiming to quickly identify the origins of selected columns.
+SELECT 语句中的 FROM 子句指定数据将从中查询的源表或表。您还可以通过将 FROM 子句放在 SELECT 子句之前来提高代码可读性，尤其是在管理较长的 SELECT 列表或旨在快速识别所选列的来源时。
 
 ```sql
--- The following two statements are equivalent:
+-- 以下两个语句是等效的：
 
--- Statement 1: Using SELECT clause with FROM clause
+-- 语句 1: 使用 SELECT 子句和 FROM 子句
 SELECT number FROM numbers(3);
 
--- Statement 2: Equivalent representation with FROM clause preceding SELECT clause
+-- 语句 2: 等效表示法，FROM 子句在 SELECT 子句之前
 FROM numbers(3) SELECT number;
 
 +--------+
@@ -252,13 +252,13 @@ FROM numbers(3) SELECT number;
 +--------+
 ```
 
-The FROM clause can also specify a location, enabling direct querying of data from various sources and eliminating the need to first load it into a table. For more information, see [Querying Staged Files](/guides/load-data/transform/querying-stage).
+FROM 子句还可以指定位置，从而可以直接从各种来源查询数据，而无需首先将其加载到表中。有关更多信息，请参阅 [查询暂存文件](/guides/load-data/transform/querying-stage)。
 
-## AT Clause
+## AT 子句
 
-The AT clause enables you to query previous versions of your data. For more information, see [AT](./03-query-at.md).
+AT 子句使您能够查询数据的先前版本。有关更多信息，请参阅 [AT](./03-query-at.md)。
 
-## WHERE Clause
+## WHERE 子句
 
 ```sql
 SELECT number FROM numbers(3) WHERE number > 1;
@@ -269,10 +269,10 @@ SELECT number FROM numbers(3) WHERE number > 1;
 +--------+
 ```
 
-## GROUP BY Clause
+## GROUP BY 子句
 
 ```sql
---Group the rows of the result set by column alias
+-- 按列别名对结果集的行进行分组
 SELECT number%2 as c1, number%3 as c2, MAX(number) FROM numbers(10000) GROUP BY c1, c2;
 +------+------+-------------+
 | c1   | c2   | MAX(number) |
@@ -285,7 +285,7 @@ SELECT number%2 as c1, number%3 as c2, MAX(number) FROM numbers(10000) GROUP BY 
 |    1 |    0 |        9999 |
 +------+------+-------------+
 
---Group the rows of the result set by column position in the SELECT list
+-- 按 SELECT 列表中的列位置对结果集的行进行分组
 SELECT number%2 as c1, number%3 as c2, MAX(number) FROM numbers(10000) GROUP BY 1, 2;
 +------+------+-------------+
 | c1   | c2   | MAX(number) |
@@ -300,10 +300,7 @@ SELECT number%2 as c1, number%3 as c2, MAX(number) FROM numbers(10000) GROUP BY 
 
 ```
 
-
-`GROUP BY` can be extended with [GROUPING SETS](./07-query-group-by-grouping-sets.md) to do more complex grouping operations.
-
-## HAVING Clause
+## HAVING 子句
 
 ```sql
 SELECT
@@ -326,10 +323,10 @@ HAVING
 +------+------+------+
 ```
 
-## ORDER BY Clause
+## ORDER BY 子句
 
 ```sql
---Sort by column name in ascending order.
+-- 按列名升序排序。
 SELECT number FROM numbers(5) ORDER BY number ASC;
 +--------+
 | number |
@@ -341,7 +338,7 @@ SELECT number FROM numbers(5) ORDER BY number ASC;
 |      4 |
 +--------+
 
---Sort by column name in descending order.
+-- 按列名降序排序。
 SELECT number FROM numbers(5) ORDER BY number DESC;
 +--------+
 | number |
@@ -353,7 +350,7 @@ SELECT number FROM numbers(5) ORDER BY number DESC;
 |      0 |
 +--------+
 
---Sort by column alias.
+-- 按列别名排序。
 SELECT number%2 AS c1, number%3 AS c2  FROM numbers(5) ORDER BY c1 ASC, c2 DESC;
 +------+------+
 | c1   | c2   |
@@ -365,7 +362,7 @@ SELECT number%2 AS c1, number%3 AS c2  FROM numbers(5) ORDER BY c1 ASC, c2 DESC;
 |    1 |    0 |
 +------+------+
 
---Sort by column position in the SELECT list
+-- 按 SELECT 列表中的列位置排序
 SELECT * FROM t1 ORDER BY 2 DESC;
 +------+------+
 | a    | b    |
@@ -382,7 +379,7 @@ SELECT a FROM t1 ORDER BY 1 DESC;
 |    1 |
 +------+
 
---Sort with the NULLS FIRST or LAST option.
+-- 使用 NULLS FIRST 或 LAST 选项排序。
 
 CREATE TABLE t_null (
   number INTEGER
@@ -394,8 +391,10 @@ INSERT INTO t_null VALUES (3);
 INSERT INTO t_null VALUES (NULL);
 INSERT INTO t_null VALUES (NULL);
 
---Databend considers NULL values larger than any non-NULL values.
---The NULL values appear last in the following example that sorts the results in ascending order:
+```
+
+-- Databend 认为 NULL 值大于任何非 NULL 值。
+-- 在以下按升序排序的示例中，NULL 值出现在最后：
 
 SELECT number FROM t_null order by number ASC;
 +--------+
@@ -408,7 +407,7 @@ SELECT number FROM t_null order by number ASC;
 |   NULL |
 +--------+
 
--- To make the NULL values appear first in the preceding example, use the NULLS FIRST option:
+-- 要在前面的示例中使 NULL 值首先出现，请使用 NULLS FIRST 选项：
 
 SELECT number FROM t_null order by number ASC nulls first;
 +--------+
@@ -421,7 +420,7 @@ SELECT number FROM t_null order by number ASC nulls first;
 |      3 |
 +--------+
 
--- Use the NULLS LAST option to make the NULL values appear last in descending order:
+-- 使用 NULLS LAST 选项使 NULL 值在降序排列中最后出现：
 
 SELECT number FROM t_null order by number DESC nulls last;
 +--------+
@@ -435,7 +434,7 @@ SELECT number FROM t_null order by number DESC nulls last;
 +--------+
 ```
 
-## LIMIT Clause
+## LIMIT 子句
 
 ```sql
 SELECT number FROM numbers(1000000000) LIMIT 1;
@@ -454,13 +453,13 @@ SELECT number FROM numbers(100000) ORDER BY number LIMIT 2 OFFSET 10;
 +--------+
 ```
 
-For optimizing query performance with large result sets, Databend has enabled the lazy_read_threshold option by default with a default value of 1,000. This option is specifically designed for queries that involve a LIMIT clause. When the lazy_read_threshold is enabled, the optimization is activated for queries where the specified LIMIT number is smaller than or equal to the threshold value you set. To disable the option, set it to 0.
+为了优化具有大量结果集的查询性能，Databend 默认启用了 lazy_read_threshold 选项，默认值为 1,000。此选项专门设计用于涉及 LIMIT 子句的查询。当 lazy_read_threshold 启用时，优化将针对指定 LIMIT 数量小于或等于您设置的阈值的查询激活。要禁用该选项，请将其设置为 0。
 
 <DetailsWrap>
 
 <details>
-  <summary>How it works</summary>
-    <div>The optimization improves performance for queries with an ORDER BY clause and a LIMIT clause. When enabled and the LIMIT number in the query is smaller than the specified threshold, only the columns involved in the ORDER BY clause are retrieved and sorted, instead of the entire result set.</div><br/><div>After the system retrieves and sorts the columns involved in the ORDER BY clause, it applies the LIMIT constraint to select the desired number of rows from the sorted result set. The system then returns the limited set of rows as the query result. This approach reduces resource usage by fetching and sorting only the necessary columns, and it further optimizes query execution by limiting the processed rows to the required subset.</div>
+  <summary>工作原理</summary>
+    <div>该优化提高了具有 ORDER BY 子句和 LIMIT 子句的查询的性能。启用后，如果查询中的 LIMIT 数量小于指定的阈值，则仅检索和排序涉及 ORDER BY 子句的列，而不是整个结果集。</div><br/><div>系统检索并排序涉及 ORDER BY 子句的列后，它会应用 LIMIT 约束从排序结果集中选择所需数量的行。然后，系统将有限的结果集作为查询结果返回。这种方法通过仅获取和排序必要的列来减少资源使用，并通过将处理的行限制为所需子集来进一步优化查询执行。</div>
 </details>
 
 </DetailsWrap>
@@ -476,7 +475,7 @@ SELECT * FROM hits WHERE URL LIKE '%google%' ORDER BY EventTime LIMIT 10 ignore_
 Empty set (0.897 sec)
 ```
 
-## OFFSET Clause
+## OFFSET 子句
 
 ```sql
 SELECT number FROM numbers(5) ORDER BY number OFFSET 2;
@@ -491,7 +490,7 @@ SELECT number FROM numbers(5) ORDER BY number OFFSET 2;
 
 ## IGNORE_RESULT
 
-Do not output the result set.
+不输出结果集。
 
 ```sql
 SELECT number FROM numbers(2);
@@ -506,9 +505,9 @@ SELECT number FROM numbers(2) IGNORE_RESULT;
 -- Empty set
 ```
 
-## Nested Sub-Selects
+## 嵌套子查询
 
-SELECT statements can be nested in queries.
+SELECT 语句可以在查询中嵌套。
 
 ```
 SELECT ... [SELECT ...[SELECT [...]]]

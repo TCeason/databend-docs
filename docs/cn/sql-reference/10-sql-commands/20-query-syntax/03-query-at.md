@@ -1,87 +1,95 @@
 ---
 title: AT
 ---
+import FunctionDescription from '@site/src/components/FunctionDescription';
 
-The SELECT statement can include an AT clause that allows you to query previous versions of your data by a specific snapshot ID or timestamp.
+<FunctionDescription description="引入或更新: v1.2.410"/>
 
-Databend automatically creates snapshots when data updates occur, so a snapshot can be considered as a view of your data at a time point in the past. You can access a snapshot by the snapshot ID or the timestamp at which the snapshot was created. For how to obtain the snapshot ID and timestamp, see [Obtaining Snapshot ID and Timestamp](#obtaining-snapshot-id-and-timestamp).
+AT 子句使您能够通过指定快照 ID、时间戳、流名称或时间间隔来检索数据的前一个版本。
 
-This is part of the Databend's Time Travel feature that allows you to query, back up, and restore from a previous version of your data within the retention period (24 hours by default).
+Databend 在数据更新时自动创建快照，因此快照可以被视为过去某个时间点的数据视图。您可以通过快照 ID 或创建快照的时间戳访问快照。有关如何获取快照 ID 和时间戳，请参阅[获取快照 ID 和时间戳](#获取快照-id-和时间戳)。
 
-## Syntax
+这是 Databend 时间回溯功能的一部分，允许您在保留期内（默认 24 小时）查询、备份和恢复数据的前一个版本。
+
+## 语法
 
 ```sql    
 SELECT ...
 FROM ...
-AT ( { SNAPSHOT => <snapshot_id> | TIMESTAMP => <timestamp> } );
+AT (
+       SNAPSHOT => '<snapshot_id>' |
+       TIMESTAMP => <timestamp> | 
+       STREAM => <stream_name> |
+       OFFSET => <time_interval> 
+   )   
 ```
 
-## Obtaining Snapshot ID and Timestamp
+| 参数      | 描述                                                                                                                                                                                                                                                                                                      |
+|-----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SNAPSHOT  | 指定一个特定的快照 ID 以查询之前的数据。                                                                                                                                                                                                                                                    |
+| TIMESTAMP | 指定一个特定的时间戳以检索数据。                                                                                                                                                                                                                                                          |
+| STREAM    | 指示查询在指定流创建时的数据。                                                                                                                                                                                                                                        |
+| OFFSET    | 指定从当前时间回退的秒数。它应为负整数形式，其中绝对值表示时间差异的秒数。例如，`-3600` 表示回退 1 小时（3,600 秒）。 |
 
-To return the snapshot IDs and timestamps of all the snapshots of a table, execute the following statement:
+## 获取快照 ID 和时间戳
+
+要返回表的所有快照的快照 ID 和时间戳，请使用 [FUSE_SNAPSHOT](../../20-sql-functions/16-system-functions/fuse_snapshot.md) 函数：
 
 ```sql
 SELECT snapshot_id, 
        timestamp 
-FROM   fuse_snapshot('<database_name>', '<table_name>'); 
+FROM   FUSE_SNAPSHOT('<database_name>', '<table_name>'); 
 ```
 
-For more information about the FUSE_SNAPSHOT function,see [FUSE_SNAPSHOT](../../20-sql-functions/16-system-functions/fuse_snapshot.md).
+## 示例
 
-## Examples
+此示例演示了 AT 子句，允许基于快照 ID、时间戳和流检索之前的数据版本：
 
-### Query with a snapshot ID
+1. 创建一个名为 `t` 的表，其中包含单个列 `a`，并向表中插入两行值 1 和 2。
 
 ```sql
--- Return snapshot IDs
-select snapshot_id,timestamp from fuse_snapshot('default', 'ontime2');
-+----------------------------------+----------------------------+
-| snapshot_id                      | timestamp                  |
-+----------------------------------+----------------------------+
-| 16729481923640f9864c1c8ddd0861e3 | 2022-06-28 09:09:40.190662 |
-+----------------------------------+----------------------------+
+CREATE TABLE t(a INT);
 
--- Query with the snapshot ID
-select * from ontime2 at (snapshot=>'16729481923640f9864c1c8ddd0861e3');
+INSERT INTO t VALUES(1);
+INSERT INTO t VALUES(2);
 ```
 
-### Query with a timestamp
+2. 在表 `t` 上创建一个名为 `s` 的流，并向表中添加一行值 3。
 
 ```sql
--- Create a table
-create table demo(c varchar);
+CREATE STREAM s ON TABLE t;
 
--- Insert two rows
-insert into demo values('batch1.1'),('batch1.2');
+INSERT INTO t VALUES(3);
+```
 
--- Insert another row
-insert into demo values('batch2.1');
+3. 运行时间回溯查询以检索之前的数据版本。 
 
--- Return timestamps
-select timestamp from fuse_snapshot('default', 'demo'); 
-+----------------------------+
-| timestamp                  |
-+----------------------------+
-| 2022-06-22 08:58:54.509008 |
-| 2022-06-22 08:58:36.254458 |
-+----------------------------+
+```sql
+-- 返回表 't' 的快照 ID 和相应的时间戳
+SELECT snapshot_id, timestamp FROM FUSE_SNAPSHOT('default', 't');
+┌───────────────────────────────────────────────────────────────┐
+│            snapshot_id           │          timestamp         │
+├──────────────────────────────────┼────────────────────────────┤
+│ 296349da841d4fa8820bbf8e228d75f3 │ 2024-04-02 15:25:21.456574 │
+│ aaa4857c5935401790db2c9f0f2818be │ 2024-04-02 15:19:02.484304 │
+│ e66ad2bc3f21416e87903dc9cd0388a3 │ 2024-04-02 15:18:40.766361 │
+└───────────────────────────────────────────────────────────────┘
 
--- Travel to the time when the last row was inserted
-select * from demo at (TIMESTAMP => '2022-06-22 08:58:54.509008'::TIMESTAMP); 
-+----------+
-| c        |
-+----------+
-| batch1.1 |
-| batch1.2 |
-| batch2.1 |
-+----------+
+-- 这些查询使用不同的方法检索相同的数据：
+-- 通过 snapshot_id:
+SELECT * FROM t AT (SNAPSHOT => 'aaa4857c5935401790db2c9f0f2818be');
+-- 通过 timestamp:
+SELECT * FROM t AT (TIMESTAMP => '2024-04-02 15:19:02.484304'::TIMESTAMP);
+-- 通过 stream:
+SELECT * FROM t AT (STREAM => s);
 
--- Travel to the time when the first two rows were inserted
-select * from demo at (TIMESTAMP => '2022-06-22 08:58:36.254458'::TIMESTAMP); 
-+----------+
-| c        |
-+----------+
-| batch1.1 |
-| batch1.2 |
-+----------+
+┌─────────────────┐
+│        a        │
+├─────────────────┤
+│               1 │
+│               2 │
+└─────────────────┘
+
+-- 从表 't' 中检索 60 秒前的所有列数据
+SELECT * FROM t AT (OFFSET => -60);
 ```

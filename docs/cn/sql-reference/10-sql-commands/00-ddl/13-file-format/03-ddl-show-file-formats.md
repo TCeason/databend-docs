@@ -3,15 +3,15 @@ title: SHOW FILE FORMATS
 sidebar_position: 2
 ---
 
-Returns a list of created file formats.
+返回已创建的文件格式列表。
 
-## Syntax
+## 语法
 
 ```sql
 SHOW FILE FORMATS;
 ```
 
-## Examples
+## 示例
 
 ```sql
 SHOW FILE FORMATS;

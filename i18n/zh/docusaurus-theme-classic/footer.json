@@ -21,11 +21,11 @@
   },
   "link.item.label.Slack": {
     "message": "Slack",
-    "description": "The label of footer link with label=Slack linking to https://link.databend.rs/join-slack"
+    "description": "The label of footer link with label=Slack linking to https://link.databend.com/join-slack"
   },
   "link.item.label.Twitter": {
     "message": "Twitter",
-    "description": "The label of footer link with label=Twitter linking to https://twitter.com/DatabendLabs"
+    "description": "The label of footer link with label=Twitter linking to https://x.com/DatabendLabs"
   },
   "copyright": {
     "message": "Copyright © 2023 Datafuse Labs, Inc. Built with Docusaurus. <br><br> <img src=\"https://www.datocms-assets.com/31049/1618983297-powered-by-vercel.svg\">",

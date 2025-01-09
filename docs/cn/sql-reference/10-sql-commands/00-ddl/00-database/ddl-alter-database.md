@@ -3,15 +3,15 @@ title: RENAME DATABASE
 sidebar_position: 4
 ---
 
-Changes the name of a database.
+更改数据库的名称。
 
-## Syntax
+## 语法
 
 ```sql
 ALTER DATABASE [ IF EXISTS ] <name> RENAME TO <new_db_name>
 ```
 
-## Examples
+## 示例
 
 ```sql
 CREATE DATABASE DATABEND;

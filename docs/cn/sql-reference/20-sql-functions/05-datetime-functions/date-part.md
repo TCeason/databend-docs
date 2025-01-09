@@ -4,57 +4,66 @@ title: DATE_PART
 
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.153"/>
+<FunctionDescription description="引入或更新：v1.2.153"/>
 
-Retrieves the designated portion of a date, time, or timestamp.
+提取日期、时间或时间戳的指定部分。
 
-See also: [EXTRACT](extract.md)
+另请参阅：[EXTRACT](extract.md)
 
-## Syntax
+## 语法
 
 ```sql
 DATE_PART( YEAR | QUARTER | MONTH | WEEK | DAY | HOUR | MINUTE | SECOND | DOW | DOY, <date_or_time_expr> )
 ```
 
-- DOW: Day of Week.
-- DOY: Day of Year.
+- DOW：星期几。
+- DOY：一年中的第几天。
 
-## Return Type
+## 返回类型
 
-Integer.
+整数。
 
-## Examples
+## 示例
 
 ```sql
 SELECT NOW();
 
-now()                |
----------------------+
-2023-10-16 02:09:28.0|
+┌────────────────────────────┐
+│            now()           │
+├────────────────────────────┤
+│ 2024-05-22 02:55:52.954761 │
+└────────────────────────────┘
 
 SELECT DATE_PART(DAY, NOW());
 
-date_part(day, now())|
----------------------+
-                   16|
+┌───────────────────────┐
+│ date_part(day, now()) │
+├───────────────────────┤
+│                    22 │
+└───────────────────────┘
 
--- October 16, 2023, is a Monday
 SELECT DATE_PART(DOW, NOW());
 
-date_part(dow, now())|
----------------------+
-                    1|
+┌───────────────────────┐
+│ date_part(dow, now()) │
+├───────────────────────┤
+│                     3 │
+└───────────────────────┘
 
--- October 16, 2023, is the 289th day of the year
 SELECT DATE_PART(DOY, NOW());
 
-date_part(doy, now())|
----------------------+
-                  289|
+┌───────────────────────┐
+│ date_part(doy, now()) │
+├───────────────────────┤
+│                   143 │
+└───────────────────────┘
 
-SELECT DATE_PART(MONTH, TO_DATE('2022-05-13'));
+SELECT DATE_PART(MONTH, TO_DATE('2024-05-21'));
 
-date_part(month, to_date('2022-05-13'))|
----------------------------------------+
-                                      5|
+┌─────────────────────────────────────────┐
+│ date_part(month, to_date('2024-05-21')) │
+│                  UInt8                  │
+├─────────────────────────────────────────┤
+│                                       5 │
+└─────────────────────────────────────────┘
 ```

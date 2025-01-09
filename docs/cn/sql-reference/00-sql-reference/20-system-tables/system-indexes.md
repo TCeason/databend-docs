@@ -4,9 +4,9 @@ title: system.indexes
 
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced: v1.1.50"/>
+<FunctionDescription description="引入版本：v1.1.50"/>
 
-包含已创建的聚合索引的相关信息。
+包含有关已创建的聚合索引的信息。
 
 另请参阅：[SHOW INDEXES](../../10-sql-commands/00-ddl/07-aggregating-index/show-indexes.md)
 

@@ -1,8 +1,8 @@
 ---
-title: Explain Commands
+title: 解释命令
 ---
 import IndexOverviewList from '@site/src/components/IndexOverviewList';
 
-This page provides reference information for the explain-related commands in Databend.
+本页提供 Databend 中与解释相关的命令的参考信息。
 
 <IndexOverviewList />

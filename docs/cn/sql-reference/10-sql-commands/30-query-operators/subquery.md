@@ -1,23 +1,23 @@
 ---
-title: Subquery Operators
+title: 子查询操作符
 ---
 
-A subquery is a query nested within another one. Databend supports the following subquery types:
+子查询是嵌套在另一个查询中的查询。Databend 支持以下子查询类型：
 
-- [Scalar Subquery](#scalar-subquery)
+- [标量子查询](#scalar-subquery)
 - [EXISTS / NOT EXISTS](#exists--not-exists)
 - [IN / NOT IN](#in--not-in)
 - [ANY (SOME)](#any-some)
 - [ALL](#all)
 
-## Scalar Subquery
+## 标量子查询
 
-A scalar subquery selects only one column or expression and returns only one row at most. An SQL query can have scalar sub queries in any places where a column or expression is expected.
+标量子查询仅选择一列或一个表达式，并且最多返回一行。SQL 查询可以在任何期望列或表达式的地方使用标量子查询。
 
-- If a scalar subquery returns 0 rows, Databend will use NULL as the subquery output.
-- If a scalar subquery returns more than one row, Databend will throw an error.
+- 如果标量子查询返回 0 行，Databend 将使用 NULL 作为子查询的输出。
+- 如果标量子查询返回多于一行，Databend 将抛出错误。
 
-### Examples
+### 示例
 
 ```sql
 CREATE TABLE t1 (a int);
@@ -47,26 +47,26 @@ WHERE  t1.a < (SELECT Min(t2.a)
 
 ## EXISTS / NOT EXISTS
 
-An EXISTS subquery is a boolean expression that can appear in a WHERE clause:
-* An EXISTS expression evaluates to TRUE if any rows are produced by the subquery.
-* A NOT EXISTS expression evaluates to TRUE if no rows are produced by the subquery.
+EXISTS 子查询是一个布尔表达式，可以出现在 WHERE 子句中：
+* EXISTS 表达式在子查询产生任何行时评估为 TRUE。
+* NOT EXISTS 表达式在子查询不产生任何行时评估为 TRUE。
 
-### Syntax
+### 语法
 
 ```sql
 [ NOT ] EXISTS ( <query> )
 ```
 
 :::note
-* Correlated EXISTS subqueries are currently supported only in a WHERE clause.
+* 目前仅在 WHERE 子句中支持相关联的 EXISTS 子查询。
 :::
 
-### Examples
+### 示例
 
 ```sql
 SELECT number FROM numbers(10) WHERE number>5 AND exists(SELECT number FROM numbers(5) WHERE number>4);
 ```
-`SELECT number FROM numbers(5) WHERE number>4` no rows are produced, `exists(SELECT number FROM numbers(5) WHERE number>4)` is FALSE.
+`SELECT number FROM numbers(5) WHERE number>4` 不产生任何行，`exists(SELECT number FROM numbers(5) WHERE number>4)` 为 FALSE。
 
 ```sql
 SELECT number FROM numbers(10) WHERE number>5 and exists(SELECT number FROM numbers(5) WHERE number>3);
@@ -80,7 +80,7 @@ SELECT number FROM numbers(10) WHERE number>5 and exists(SELECT number FROM numb
 +--------+
 ```
 
-`EXISTS(SELECT NUMBER FROM NUMBERS(5) WHERE NUMBER>3)` is TRUE.
+`EXISTS(SELECT NUMBER FROM NUMBERS(5) WHERE NUMBER>3)` 为 TRUE。
 
 ```sql
 SELECT number FROM numbers(10) WHERE number>5 AND not exists(SELECT number FROM numbers(5) WHERE number>4);
@@ -94,21 +94,21 @@ SELECT number FROM numbers(10) WHERE number>5 AND not exists(SELECT number FROM 
 +--------+
 ```
 
-`not exists(SELECT number FROM numbers(5) WHERE number>4)` is TRUE.
+`not exists(SELECT number FROM numbers(5) WHERE number>4)` 为 TRUE。
 
 ## IN / NOT IN
 
-By using IN or NOT IN, you can check whether an expression matches any value in a list returned by a subquery.
+通过使用 IN 或 NOT IN，您可以检查表达式是否与子查询返回的列表中的任何值匹配。
 
-- When you use IN or NOT IN, the subquery must return a single column of values. 
+- 当您使用 IN 或 NOT IN 时，子查询必须返回单列值。
 
-### Syntax
+### 语法
 
 ```sql
 [ NOT ] IN ( <query> )
 ```
 
-### Examples
+### 示例
 
 ```sql
 CREATE TABLE t1 (a int);
@@ -122,7 +122,7 @@ INSERT INTO t2 VALUES (3);
 INSERT INTO t2 VALUES (4);
 INSERT INTO t2 VALUES (5);
 
--- IN example
+-- IN 示例
 SELECT * 
 FROM   t1 
 WHERE  t1.a IN (SELECT *
@@ -135,7 +135,7 @@ WHERE  t1.a IN (SELECT *
 |      3 |
 +--------+
 
--- NOT IN example
+-- NOT IN 示例
 SELECT * 
 FROM   t1 
 WHERE  t1.a NOT IN (SELECT *
@@ -152,13 +152,13 @@ WHERE  t1.a NOT IN (SELECT *
 
 ## ANY (SOME)
 
-You can use ANY (or SOME) to check whether a comparison is true for any of the values returned by a subquery.
+您可以使用 ANY（或 SOME）来检查比较是否对子查询返回的任何值为真。
 
-- The keyword ANY (or SOME) must follow one of the [Comparison Operators](comparison.md).
-- If the subquery doesn't return any values, the comparison evaluates to false.
-- SOME work the same way as ANY.
+- 关键字 ANY（或 SOME）必须跟随在 [比较操作符](comparison.md) 之后。
+- 如果子查询不返回任何值，比较评估为 false。
+- SOME 的工作方式与 ANY 相同。
 
-### Syntax
+### 语法
 
 ```sql
 -- ANY
@@ -168,7 +168,7 @@ comparison_operator ANY ( <query> )
 comparison_operator SOME ( <query> )
 ```
 
-### Examples
+### 示例
 
 ```sql
 CREATE TABLE t1 (a int);
@@ -199,18 +199,18 @@ WHERE  t1.a < ANY (SELECT *
 
 ## ALL
 
-You can use ALL to check whether a comparison is true for all of the values returned by a subquery.
+您可以使用 ALL 来检查比较是否对子查询返回的所有值为真。
 
-- The keyword ALL must follow one of the [Comparison Operators](comparison.md).
-- If the subquery doesn't return any values, the comparison evaluates to true.
+- 关键字 ALL 必须跟随在 [比较操作符](comparison.md) 之后。
+- 如果子查询不返回任何值，比较评估为 true。
 
-### Syntax
+### 语法
 
 ```sql
 comparison_operator ALL ( <query> )
 ```
 
-### Examples
+### 示例
 
 ```sql
 CREATE TABLE t1 (a int);

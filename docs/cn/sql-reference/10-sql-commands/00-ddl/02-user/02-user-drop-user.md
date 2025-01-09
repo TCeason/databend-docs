@@ -3,15 +3,15 @@ title: DROP USER
 sidebar_position: 4
 ---
 
-Drop the specified user from the system.
+从系统中删除指定的用户。
 
-## Syntax
+## 语法
 
 ```sql
 DROP USER [ IF EXISTS ] <name>
 ```
 
-## Examples
+## 示例
 
 ```sql
 DROP USER user1;

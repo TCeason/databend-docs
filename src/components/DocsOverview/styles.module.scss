@@ -1,0 +1,133 @@
+.outWrap {
+  width: 1100px;
+  margin-top: 20px;
+  @media (max-width: 1430px) {
+    width: 1000px;
+  }
+  @media (max-width: 1335px) {
+    width: 900px;
+  }
+  @media (max-width: 1235px) {
+    width: 100%;
+  }
+}
+
+.top {
+  .topCard {
+    a {
+      height: 100%;
+      text-decoration: unset !important;
+      h3 {
+        display: flex;
+        // white-space: nowrap;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-weight: 600;
+        font-size: 16px;
+        span {
+          flex: 1;
+        }
+        svg {
+          position: relative;
+          top: 3px;
+        }
+      }
+      div {
+        font-size: 14px;
+        line-height: 20px;
+        color: hsl(var(--foreground)) !important;
+      }
+    }
+  }
+}
+.cardWrap {
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  padding-bottom: 2rem;
+  padding-top: 2rem;
+  .homPpageSectionLeft {
+    @media (min-width: 768px) {
+      margin-bottom: 0;
+      margin-right: 2rem;
+      width: 350px;
+    }
+    .logo {
+      margin-bottom: 4px;
+    }
+    h3 {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+  }
+  @media (max-width: 1235px) {
+    flex-direction: column;
+    .content {
+      margin-top: 30px;
+    }
+    .homPpageSectionLeft {
+      width: auto !important;
+    }
+  }
+}
+
+.smallCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: normal !important;
+  color: hsl(var(--foreground)) !important;
+  text-decoration: unset !important;
+  padding: 4px;
+  border-radius: 4px;
+  &:hover {
+    background-color: var(--color-fill-0);
+  }
+  span {
+    line-height: 20px;
+  }
+}
+// .commomCard {
+//   border-top: 1px solid var(--color-border);
+//   border-bottom: 1px solid var(--color-border);
+// }
+.gettingStart {
+  flex-direction: column;
+  .homPpageSectionLeft {
+    width: auto !important;
+  }
+  .content {
+    margin-top: 30px;
+  }
+}
+.topEnhancedCard {
+  border-top: 1px solid var(--color-border);
+  padding-top: 20px;
+}
+.cardPart {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+.cardActiveOut {
+  height: 100%;
+}
+.cardActive {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
+  text-decoration: unset !important;
+  color: hsl(var(--foreground)) !important;
+  > div {
+    flex: 1;
+  }
+}
+.spanLine {
+  text-decoration-line: underline;
+  color: var(--text-blue-600);
+}
+.moreUseful {
+  padding-left: 20px;
+  padding-top: 20px;
+}

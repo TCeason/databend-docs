@@ -1,33 +1,33 @@
 ---
-id: string-length
 title: LENGTH
 ---
 
-Returns the length of an input string or binary value. For strings, the length is the number of characters, and UTF-8 characters are counted as a single character. For binary, the length is the number of bytes.
+返回给定输入字符串或二进制值的长度。对于字符串，长度表示字符的计数，每个UTF-8字符被视为一个字符。对于二进制数据，长度对应于字节数。
 
-## Syntax
+## 语法
 
 ```sql
-LENGTH(<input>)
+LENGTH(<expr>)
 ```
 
-## Arguments
+## 别名
 
-| Arguments | Description |
-|-----------|-------------|
-| `<input>`   | The string or binary. |
+- [CHAR_LENGTH](char-length.md)
+- [CHARACTER_LENGTH](character-length.md)
+- [LENGTH_UTF8](length-utf8.md)
 
-## Return Type
+## 返回类型
 
-`BIGINT`
+BIGINT
 
-## Examples
+## 示例
 
 ```sql
-SELECT LENGTH('Word');
-+----------------+
-| LENGTH('Word') |
-+----------------+
-|              4 |
-+----------------+
+SELECT LENGTH('Hello'), LENGTH_UTF8('Hello'), CHAR_LENGTH('Hello'), CHARACTER_LENGTH('Hello');
+
+┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│ length('hello') │ length_utf8('hello') │ char_length('hello') │ character_length('hello') │
+├─────────────────┼──────────────────────┼──────────────────────┼───────────────────────────┤
+│               5 │                    5 │                    5 │                         5 │
+└───────────────────────────────────────────────────────────────────────────────────────────┘
 ```

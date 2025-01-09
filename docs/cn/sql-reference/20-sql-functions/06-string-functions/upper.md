@@ -2,32 +2,30 @@
 title: UPPER
 ---
 
-Returns the string str with all characters changed to uppercase.
+返回一个将所有字符转换为大写的字符串。
 
-## Syntax
+## 语法
 
 ```sql
-UPPER(<str>);
+UPPER(<str>)
 ```
 
-## Arguments
+## 别名
 
-| Arguments | Description                |
-|-----------|----------------------------|
-| `<str>`   | The string to be uppercase |
+- [UCASE](ucase.md)
 
+## 返回类型
 
-## Return Type
+VARCHAR
 
-`VARCHAR`
-
-## Examples
+## 示例
 
 ```sql
-SELECT UPPER('Hello, World!')
-+------------------------+
-| upper('Hello, World!') |
-+------------------------+
-| HELLO, WORLD!          |
-+------------------------+
+SELECT UPPER('Hello, Databend!'), UCASE('Hello, Databend!');
+
+┌───────────────────────────────────────────────────────┐
+│ upper('hello, databend!') │ ucase('hello, databend!') │
+├───────────────────────────┼───────────────────────────┤
+│ HELLO, DATABEND!          │ HELLO, DATABEND!          │
+└───────────────────────────────────────────────────────┘
 ```

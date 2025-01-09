@@ -2,33 +2,33 @@
 title: SOUNDS LIKE
 ---
 
-Compares the pronunciation of two strings by their Soundex codes. Soundex is a phonetic algorithm that produces a code representing the pronunciation of a string, allowing for approximate matching of strings based on their pronunciation rather than their spelling. Databend offers the [SOUNDEX](soundex.md) function that allows you to get the Soundex code from a string.
+通过它们的 Soundex 代码比较两个字符串的发音。Soundex 是一种语音算法，它生成一个表示字符串发音的代码，允许基于发音而不是拼写进行字符串的近似匹配。Databend 提供了 [SOUNDEX](soundex.md) 函数，允许你从字符串中获取 Soundex 代码。
 
-SOUNDS LIKE is frequently employed in the WHERE clause of SQL queries to narrow down rows using fuzzy string matching, such as for names and addresses, see [Filtering Rows](#filtering-rows) in [Examples](#examples).
+SOUNDS LIKE 经常在 SQL 查询的 WHERE 子句中使用，以通过模糊字符串匹配来缩小行范围，例如用于名称和地址，请参见 [示例](#examples) 中的 [过滤行](#filtering-rows)。
 
 :::note
-While the function can be useful for approximate string matching, it is important to note that it is not always accurate. The Soundex algorithm is based on English pronunciation rules and may not work well for strings from other languages or dialects. 
+虽然该函数对于近似字符串匹配很有用，但需要注意的是它并不总是准确的。Soundex 算法基于英语发音规则，可能不适用于其他语言或方言的字符串。
 :::
 
-## Syntax
+## 语法
 
 ```sql
 <str1> SOUNDS LIKE <str2>
 ```
 
-## Arguments
+## 参数
 
-| Arguments | Description |
+| 参数    | 描述         |
 |-----------|-------------|
-| str1, 2   | The strings you compare. |
+| str1, 2   | 你比较的字符串。 |
 
-## Return Type
+## 返回类型
 
-Return a Boolean value of 1 if the Soundex codes for the two strings are the same (which means they sound alike) and 0 otherwise.
+如果两个字符串的 Soundex 代码相同（这意味着它们发音相似），则返回布尔值 1，否则返回 0。
 
-## Examples
+## 示例
 
-### Comparing Strings
+### 比较字符串
 
 ```sql
 SELECT 'two' SOUNDS LIKE 'too'
@@ -44,7 +44,7 @@ SELECT 'Monday' SOUNDS LIKE 'Sunday';
 0
 ```
 
-### Filtering Rows
+### 过滤行
 
 ```sql
 SELECT * FROM  employees;

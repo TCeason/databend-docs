@@ -2,4 +2,4 @@
 title: TO_DATETIME
 ---
 
-`TO_DATETIME` is an alias of `TO_TIMESTAMP`. See [TO_TIMESTAMP](to-timestamp).
+[TO_TIMESTAMP](to-timestamp) 的别名。

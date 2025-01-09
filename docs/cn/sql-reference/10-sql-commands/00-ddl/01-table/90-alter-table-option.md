@@ -1,48 +1,74 @@
 ---
-title: ALTER TABLE OPTION
+title: ALTER TABLE OPTIONS
 sidebar_position: 5
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced: v1.2.25"/>
+<FunctionDescription description="引入或更新于：v1.2.643"/>
 
-Modifies the options of a table created with the default [Fuse engine](../../../00-sql-reference/30-table-engines/00-fuse.md). For the available options you can modify, see [Options](../../../00-sql-reference/30-table-engines/00-fuse.md#options).
+为表设置或取消设置 [Fuse Engine 选项](../../../00-sql-reference/30-table-engines/00-fuse.md#fuse-engine-options)。
 
-## Syntax
+## 语法
 
 ```sql
-ALTER TABLE [database.]table_name SET OPTIONS (options)
+-- 设置 Fuse Engine 选项
+ALTER TABLE [ <database_name>. ]<table_name> SET OPTIONS (<options>)
+
+-- 取消设置 Fuse Engine 选项，恢复为默认值
+ALTER TABLE [ <database_name>. ]<table_name> UNSET OPTIONS (<options>)
 ```
 
-## Examples
+请注意，只有以下 Fuse Engine 选项可以被取消设置：
+
+- `block_per_segment`
+- `block_size_threshold`
+- `data_retention_period_in_hours`
+- `row_avg_depth_threshold`
+- `row_per_block`
+- `row_per_page`
+
+## 示例
+
+以下示例展示了如何设置 Fuse Engine 选项，并通过 [SHOW CREATE TABLE](show-create-table.md) 验证更改：
 
 ```sql
-create table t(a int, b int);
+CREATE TABLE fuse_table (a int);
 
-alter table t set options(bloom_index_columns='a');
+SET hide_options_in_show_create_table=0;
 
-set hide_options_in_show_create_table=0;
+-- 显示当前的 CREATE TABLE 语句，包括 Fuse Engine 选项
+SHOW CREATE TABLE fuse_table;
 
-show create table t;
-+-------+-------------------------------------------------------------------------+
-| Table | Create Table                                                            |
-+-------+-------------------------------------------------------------------------+
-| t     | CREATE TABLE `t` (
-  `a` INT,
-  `b` INT
-) ENGINE=FUSE BLOOM_INDEX_COLUMNS='a' COMPRESSION='zstd' STORAGE_FORMAT='parquet' |
-+-------+-------------------------------------------------------------------------+
+-[ RECORD 1 ]-----------------------------------
+       Table: fuse_table
+Create Table: CREATE TABLE fuse_table (
+  a INT NULL
+) ENGINE=FUSE COMPRESSION='lz4' STORAGE_FORMAT='native'
 
--- disable all the bloom filter index.
-alter table t set options(bloom_index_columns='');
+-- 将每个段的最大块数更改为 500
+-- 将数据保留期更改为 240 小时
+ALTER TABLE fuse_table SET OPTIONS (block_per_segment = 500, data_retention_period_in_hours = 240);
 
-show create table t;
-+-------+-------------------------------------------------------------------------+
-| Table | Create Table                                                            |
-+-------+-------------------------------------------------------------------------+
-| t     | CREATE TABLE `t` (
-  `a` INT,
-  `b` INT
-) ENGINE=FUSE BLOOM_INDEX_COLUMNS='' COMPRESSION='zstd' STORAGE_FORMAT='parquet'  |
-+-------+-------------------------------------------------------------------------+
+-- 显示更新后的 CREATE TABLE 语句，反映新的选项
+SHOW CREATE TABLE fuse_table;
+
+-[ RECORD 1 ]-----------------------------------
+       Table: fuse_table
+Create Table: CREATE TABLE fuse_table (
+  a INT NULL
+) ENGINE=FUSE BLOCK_PER_SEGMENT='500' COMPRESSION='lz4' DATA_RETENTION_PERIOD_IN_HOURS='240' STORAGE_FORMAT='native'
+```
+
+以下示例展示了如何取消设置 Fuse Engine 选项，恢复为默认值：
+
+```sql
+ALTER TABLE fuse_table UNSET OPTIONS (block_per_segment, data_retention_period_in_hours);
+
+SHOW CREATE TABLE fuse_table;
+
+-[ RECORD 1 ]-----------------------------------
+       Table: fuse_table
+Create Table: CREATE TABLE fuse_table (
+  a INT NULL
+) ENGINE=FUSE COMPRESSION='lz4' STORAGE_FORMAT='native'
 ```
