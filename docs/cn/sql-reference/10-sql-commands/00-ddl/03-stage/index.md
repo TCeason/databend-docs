@@ -1,12 +1,14 @@
 ---
-title: Stage Commands
+title: Stage 命令
 ---
 import IndexOverviewList from '@site/src/components/IndexOverviewList';
 
-A stage is a storage location where data files are temporarily held before being loaded into a table or exported to an external system. Databend provides three types of stages to meet different needs. For more information about the Databend stage types, see [Understanding Stages](/guides/load-data/stage/whystage).
-
-Databend offers a variety of stage commands to help you manage your stages. For a brief description of their usage, see [Managing Stages](/guides/load-data/stage/manage-stages).
+本页面提供了 Databend 中与 Stage 相关的命令的参考信息。
 
 <IndexOverviewList />
 
-To learn how to upload or download files to or from a stage, see the examples provided in  [Staging Files](/guides/load-data/stage/stage-files).
+相关主题：
+
+- [使用 Stage](/guides/load-data/stage/)
+- [从 Stage 加载数据](/guides/load-data/load/stage)
+- [查询与转换](/guides/load-data/transform/querying-stage)

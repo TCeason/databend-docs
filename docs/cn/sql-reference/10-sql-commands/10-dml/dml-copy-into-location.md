@@ -1,31 +1,31 @@
 ---
-title: 'COPY INTO <location>'
-sidebar_label: 'COPY INTO <location>'
-description:
-  'Unload Data using COPY INTO <location>'
+title: "COPY INTO <location>"
+sidebar_label: "COPY INTO <location>"
 ---
+
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.134"/>
+<FunctionDescription description="引入或更新: v1.2.647"/>
 
-COPY INTO allows you to unload data from a table or query into one or more files in one of the following locations:
+COPY INTO 允许您将数据从表或查询中卸载到一个或多个文件中，这些文件位于以下位置之一：
 
-* User / Internal / External stages: See [Understanding Stages](/guides/load-data/stage/whystage) to learn about stages in Databend.
-* Buckets or containers created in a storage service.
+- 用户/内部/外部阶段：请参阅 [什么是 Stage？](/guides/load-data/stage/what-is-stage) 以了解 Databend 中的阶段。
+- 在存储服务中创建的存储桶或容器。
 
-See also: [`COPY INTO <table>`](dml-copy-into-table.md)
+另请参阅：[`COPY INTO <table>`](dml-copy-into-table.md)
 
-## Syntax
+## 语法
 
 ```sql
 COPY INTO { internalStage | externalStage | externalLocation }
 FROM { [<database_name>.]<table_name> | ( <query> ) }
 [ FILE_FORMAT = (
          FORMAT_NAME = '<your-custom-format>'
-         | TYPE = { CSV | TSV | NDJSON | PARQUET | XML } [ formatTypeOptions ]
+         | TYPE = { CSV | TSV | NDJSON | PARQUET } [ formatTypeOptions ]
        ) ]
 [ copyOptions ]
 [ VALIDATION_MODE = RETURN_ROWS ]
+[ DETAILED_OUTPUT = true | false ]
 ```
 
 ### internalStage
@@ -56,7 +56,8 @@ externalLocation ::=
         <connection_parameters>
   )
 ```
-For the connection parameters available for accessing Amazon S3-like storage services, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+
+有关访问 Amazon S3-like 存储服务的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="Azure Blob Storage" label="Azure Blob Storage">
@@ -69,7 +70,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Azure Blob Storage, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Azure Blob Storage 的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="Google Cloud Storage" label="Google Cloud Storage">
@@ -82,7 +83,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Google Cloud Storage, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Google Cloud Storage 的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="Alibaba Cloud OSS" label="Alibaba Cloud OSS">
@@ -95,7 +96,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Alibaba Cloud OSS, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Alibaba Cloud OSS 的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="Tencent Cloud Object Storage" label="Tencent Cloud Object Storage">
@@ -108,7 +109,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing Tencent Cloud Object Storage, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 Tencent Cloud Object Storage 的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="Hadoop Distributed File System (HDFS)" label="HDFS">
@@ -121,7 +122,7 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing HDFS, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 HDFS 的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 
 <TabItem value="WebHDFS" label="WebHDFS">
@@ -134,39 +135,67 @@ externalLocation ::=
   )
 ```
 
-For the connection parameters available for accessing WebHDFS, see [Connection Parameters](/00-sql-reference/51-connect-parameters.md).
+有关访问 WebHDFS 的连接参数，请参阅 [连接参数](/00-sql-reference/51-connect-parameters.md)。
 </TabItem>
 </Tabs>
 
 ### FILE_FORMAT
 
-See [Input & Output File Formats](../../00-sql-reference/50-file-format-options.md) for details.
+详情请参阅 [输入 & 输出文件格式](../../00-sql-reference/50-file-format-options.md)。
 
 ### copyOptions
 
 ```sql
 copyOptions ::=
-  [ SINGLE = TRUE | FALSE ]
+  [ SINGLE = true | false ]
   [ MAX_FILE_SIZE = <num> ]
+  [ OVERWRITE = true | false ]
+  [ INCLUDE_QUERY_ID = true | false ]
+  [ USE_RAW_PATH = true | false ]
 ```
 
-| Parameter       | Description                                                                                                               |
-|-----------------|---------------------------------------------------------------------------------------------------------------------------|
-| SINGLE        | When TRUE, the command unloads data into one single file. Default: FALSE.                                                 |
-| MAX_FILE_SIZE | The maximum size (in bytes) of each file to be created.<br />Effective when `SINGLE` is FALSE. Default: 67108864 bytes (64 MB). |
+| 参数             | 默认值                   | 描述                                                                                                                                                           |
+|------------------|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SINGLE           | false                  | 当 `true` 时，命令将数据卸载到一个单一文件中。                                                                                                             |
+| MAX_FILE_SIZE    | 67108864 bytes (64 MB) | 每个文件的最大大小（以字节为单位）。当 `SINGLE` 为 false 时有效。                                                                             |
+| OVERWRITE        | false                  | 当 `true` 时，目标路径中同名现有文件将被覆盖。注意：`OVERWRITE = true` 需要 `USE_RAW_PATH = true` 且 `INCLUDE_QUERY_ID = false`。   |
+| INCLUDE_QUERY_ID | true                   | 当 `true` 时，导出的文件名中将包含一个唯一的 UUID。                                                                                                 |
+| USE_RAW_PATH     | false                  | 当 `true` 时，将使用用户提供的精确路径（包括完整文件名）来导出数据。如果设置为 `false`，用户必须提供一个目录路径。 |
 
-## Examples
+### DETAILED_OUTPUT
 
-In this section, the provided examples make use of the following table and data:
+确定是否应返回数据卸载的详细结果，默认值为 `false`。更多信息请参阅 [输出](#output)。
+
+## 输出
+
+COPY INTO 提供数据卸载结果的摘要，包含以下列：
+
+| 列            | 描述                                                                                   |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| rows_unloaded | 成功卸载到目标的行数。                                  |
+| input_bytes   | 从源表读取的数据总大小（以字节为单位）。 |
+| output_bytes  | 写入目标的数据总大小（以字节为单位）。                             |
+
+当 `DETAILED_OUTPUT` 设置为 `true` 时，COPY INTO 提供以下列的结果。这有助于定位卸载的文件，尤其是在使用 `MAX_FILE_SIZE` 将卸载的数据分成多个文件时。
+
+| 列        | 描述                                        |
+| --------- | -------------------------------------------------- |
+| file_name | 卸载文件的名称。                     |
+| file_size | 卸载文件的大小（以字节为单位）。            |
+| row_count | 卸载文件中包含的行数。 |
+
+## 示例
+
+在本节中，提供的示例使用了以下表和数据：
 
 ```sql
--- Create sample table
+-- 创建示例表
 CREATE TABLE canadian_city_population (
      city_name VARCHAR(50),
      population INT
 );
 
--- Insert sample data
+-- 插入示例数据
 INSERT INTO canadian_city_population (city_name, population)
 VALUES
 ('Toronto', 2731571),
@@ -181,73 +210,92 @@ VALUES
 ('Halifax', 403390);
 ```
 
-### Example 1: Unloading to Internal Stage
+### 示例 1: 卸载到内部阶段
 
-This example unloads data to an internal stage:
+此示例将数据卸载到内部阶段：
 
 ```sql
--- Create an internal stage
+-- 创建内部阶段
 CREATE STAGE my_internal_stage;
 
--- Unload data from the table to the stage using the PARQUET file format
+-- 使用 PARQUET 文件格式将表中的数据卸载到阶段
 COPY INTO @my_internal_stage
     FROM canadian_city_population
     FILE_FORMAT = (TYPE = PARQUET);
 
+┌────────────────────────────────────────────┐
+│ rows_unloaded │ input_bytes │ output_bytes │
+├───────────────┼─────────────┼──────────────┤
+│            10 │         211 │          572 │
+└────────────────────────────────────────────┘
 
 LIST @my_internal_stage;
 
-name                                                           |size|md5|last_modified                |creator|
----------------------------------------------------------------+----+---+-----------------------------+-------+
-data_cb30822a-4166-4df6-9030-21a47c565bea_0000_00000000.parquet| 566|   |2023-10-10 02:26:48.219 +0000|       |
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                               name                              │  size  │        md5       │         last_modified         │      creator     │
+├─────────────────────────────────────────────────────────────────┼────────┼──────────────────┼───────────────────────────────┼──────────────────┤
+│ data_abe520a3-ee88-488c-9221-b07c562c9a30_0000_00000000.parquet │    572 │ NULL             │ 2024-01-18 16:20:48.979 +0000 │ NULL             │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Example 2: Unloading to Compressed File
+### 示例 2: 卸载到压缩文件
 
-This example unloads data into a compressed file:
+此示例将数据卸载到压缩文件：
 
 ```sql
--- Unload data from the table to the stage using the CSV file format with gzip compression
+-- 创建内部阶段
+CREATE STAGE my_internal_stage;
+
+-- 使用 CSV 文件格式和 gzip 压缩将表中的数据卸载到阶段
 COPY INTO @my_internal_stage
     FROM canadian_city_population
     FILE_FORMAT = (TYPE = CSV COMPRESSION = gzip);
 
-COPY INTO @my_internal_stage
-    FROM canadian_city_population
-    FILE_FORMAT = (TYPE = CSV COMPRESSION = gzip);
-
+┌────────────────────────────────────────────┐
+│ rows_unloaded │ input_bytes │ output_bytes │
+├───────────────┼─────────────┼──────────────┤
+│            10 │         182 │          168 │
+└────────────────────────────────────────────┘
 
 LIST @my_internal_stage;
 
-name                                                           |size|md5|last_modified                |creator|
----------------------------------------------------------------+----+---+-----------------------------+-------+
-data_95825fe7-de33-4f9c-9a66-3e9525996252_0000_00000000.csv.gz | 168|   |2023-10-10 02:38:37.349 +0000|       |
-data_cb30822a-4166-4df6-9030-21a47c565bea_0000_00000000.parquet| 566|   |2023-10-10 02:26:48.219 +0000|       |
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              name                              │  size  │        md5       │         last_modified         │      creator     │
+├────────────────────────────────────────────────────────────────┼────────┼──────────────────┼───────────────────────────────┼──────────────────┤
+│ data_7970afa5-32e3-4e7d-b793-e42a2a82a8e6_0000_00000000.csv.gz │    168 │ NULL             │ 2024-01-18 16:27:01.663 +0000 │ NULL             │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
--- COPY INTO also works with custom file formats. See below:
--- Create a custom file format named my_cs_gzip with CSV format and gzip compression
+-- COPY INTO 也适用于自定义文件格式。请参见下方：
+-- 创建名为 my_cs_gzip 的自定义文件格式，使用 CSV 格式和 gzip 压缩
 CREATE FILE FORMAT my_csv_gzip TYPE = CSV COMPRESSION = gzip;
-       
--- Unload data from the table to the stage using the custom file format my_cs_gzip
+
+-- 使用自定义文件格式 my_cs_gzip 将表中的数据卸载到阶段
 COPY INTO @my_internal_stage
     FROM canadian_city_population
     FILE_FORMAT = (FORMAT_NAME = 'my_csv_gzip');
 
+┌────────────────────────────────────────────┐
+│ rows_unloaded │ input_bytes │ output_bytes │
+├───────────────┼─────────────┼──────────────┤
+│            10 │         182 │          168 │
+└────────────────────────────────────────────┘
+
 LIST @my_internal_stage;
 
-name                                                           |size|md5|last_modified                |creator|
----------------------------------------------------------------+----+---+-----------------------------+-------+
-data_95825fe7-de33-4f9c-9a66-3e9525996252_0000_00000000.csv.gz | 168|   |2023-10-10 02:38:37.349 +0000|       |
-data_dfb0935f-8ccc-4c4e-970b-5189f1436e89_0000_00000000.csv.gz | 168|   |2023-10-10 02:59:53.580 +0000|       |
-data_cb30822a-4166-4df6-9030-21a47c565bea_0000_00000000.parquet| 566|   |2023-10-10 02:26:48.219 +0000|       |
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              name                              │  size  │        md5       │         last_modified         │      creator     │
+├────────────────────────────────────────────────────────────────┼────────┼──────────────────┼───────────────────────────────┼──────────────────┤
+│ data_d006ba1c-0609-46d7-a67b-75c7078d86ff_0000_00000000.csv.gz │    168 │ NULL             │ 2024-01-18 16:29:29.721 +0000 │ NULL             │
+│ data_7970afa5-32e3-4e7d-b793-e42a2a82a8e6_0000_00000000.csv.gz │    168 │ NULL             │ 2024-01-18 16:27:01.663 +0000 │ NULL             │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Example 3: Unloading to Bucket
+### 示例 3：卸载到桶
 
-This example unloads data into a bucket on MinIO:
+此示例将数据卸载到 MinIO 上的一个桶中：
 
 ```sql
--- Unload data from the table to a bucket named 'databend' on MinIO using the PARQUET file format
+-- 将数据从表中卸载到 MinIO 上名为 'databend' 的桶中，使用 PARQUET 文件格式
 COPY INTO 's3://databend'
     CONNECTION = (
     ENDPOINT_URL = 'http://localhost:9000/',
@@ -257,6 +305,12 @@ COPY INTO 's3://databend'
     )
     FROM canadian_city_population
     FILE_FORMAT = (TYPE = PARQUET);
+
+┌────────────────────────────────────────────┐
+│ rows_unloaded │ input_bytes │ output_bytes │
+├───────────────┼─────────────┼──────────────┤
+│            10 │         211 │          572 │
+└────────────────────────────────────────────┘
 ```
 
-![Alt text](@site/docs/public/img/sql/copy-into-bucket.png)
+![Alt text](/img/sql/copy-into-bucket.png)

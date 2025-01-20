@@ -1,34 +1,34 @@
 ---
-title: Stage 文件
+title: 上传至Stage
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-Databend 推荐使用两种文件上传方法进行 Stage 文件处理：[PRESIGN](/sql/sql-commands/ddl/stage/presign) 和 PUT/GET 命令。这些方法能够直接在客户端与您的存储之间传输数据，省去了中间环节，通过减少 Databend 与您的存储之间的流量，从而节省成本。
+Databend推荐两种文件上传方法到Stage：[PRESIGN](/sql/sql-commands/ddl/stage/presign) 和 PUT/GET 命令。这些方法使得客户端与存储之间的数据传输直接进行，消除了中间环节，并通过减少Databend与存储之间的流量来节省成本。
 
-![Alt text](@site/docs/public/img/load/staging-file.png)
+![Alt text](/img/load/staging-file.png)
 
-PRESIGN 方法会生成一个带有签名的限时 URL，客户端可以使用该 URL 安全地启动文件上传。这个 URL 提供对指定 Stage 的临时访问权限，允许客户端直接传输数据，而不需要依赖 Databend 服务器完成整个过程，这样既增强了安全性也提高了效率。如果您使用 [BendSQL](../../30-sql-clients/00-bendsql/index.md) 来管理 Stage 中的文件，您可以使用 PUT 命令上传文件以及使用 GET 命令下载文件。
+PRESIGN方法生成一个有时间限制的带签名URL，客户端可以使用该URL安全地发起文件上传。此URL授予对指定Stage的临时访问权限，允许客户端直接传输数据，而无需依赖Databend服务器进行整个过程，从而增强了安全性和效率。
 
-- GET 命令目前只能下载 Stage 中的所有文件，不能下载单个文件。
-- 这些命令仅限于 BendSQL 使用，当 Databend 将文件系统作为存储后端时，GET 命令将无法使用。
+如果您使用[BendSQL](../../30-sql-clients/00-bendsql/index.md)来管理Stage中的文件，您可以使用PUT命令上传文件，使用GET命令下载文件。
 
-## 示例
+- GET命令目前只能下载Stage中的所有文件，不能下载单个文件。
+- 这些命令专属于BendSQL，并且当Databend使用文件系统作为存储后端时，GET命令将无法工作。
 
-### 使用预签名 URL 上传
+### 使用预签名URL上传
 
-以下示例演示如何使用预签名 URL 上传样本文件（[books.parquet](https://datafuse-1253727613.cos.ap-hongkong.myqcloud.com/data/books.parquet)）到用户 Stage、内部 Stage 和外部 Stage。
+以下示例展示了如何使用预签名URL将示例文件（[books.parquet](https://datafuse-1253727613.cos.ap-hongkong.myqcloud.com/data/books.parquet)）上传到用户Stage、内部Stage和外部Stage。
 
 <Tabs groupId="presign">
 
-<TabItem value="user" label="上传到用户 Stage">
+<TabItem value="user" label="上传至用户Stage">
 
 ```sql
 PRESIGN UPLOAD @~/books.parquet;
 ```
 
-结果：
+结果:
 
 ```
 ┌────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -44,13 +44,13 @@ PRESIGN UPLOAD @~/books.parquet;
 curl -X PUT -T books.parquet "https://s3.us-east-2.amazonaws.com/databend-toronto/stage/user/root/books.parquet?X-Amz-Algorithm=... ...
 ```
 
-检查 Stage 中的文件
+检查Stage中的文件:
 
 ```sql
 LIST @~;
 ```
 
-结果：
+结果:
 
 ```
 ┌───────────────┬──────┬──────────────────────────────────────┬─────────────────────────────────┬─────────┐
@@ -62,7 +62,7 @@ LIST @~;
 
 </TabItem>
 
-<TabItem value="internal" label="上传到内部 Stage">
+<TabItem value="internal" label="上传至内部Stage">
 
 ```sql
 CREATE STAGE my_internal_stage;
@@ -72,7 +72,7 @@ CREATE STAGE my_internal_stage;
 PRESIGN UPLOAD @my_internal_stage/books.parquet;
 ```
 
-结果：
+结果:
 
 ```
 ┌─────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -88,13 +88,13 @@ PRESIGN UPLOAD @my_internal_stage/books.parquet;
 curl -X PUT -T books.parquet "https://s3.us-east-2.amazonaws.com/databend-toronto/stage/internal/my_internal_stage/books.parquet?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIASTQNLUZWP2UY2HSN%2F20230628%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20230628T022951Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=9cfcdf3b3554280211f88629d60358c6d6e6a5e49cd83146f1daea7dfe37f5c1"
 ```
 
-检查 Stage 中的文件
+检查Stage中的文件:
 
 ```sql
 LIST @my_internal_stage;
 ```
 
-结果：
+结果:
 
 ```
 ┌──────────────────────────────────┬───────┬──────────────────────────────────────┬─────────────────────────────────┬─────────┐
@@ -105,7 +105,7 @@ LIST @my_internal_stage;
 ```
 
 </TabItem>
-<TabItem value="external" label="上传到外部 Stage">
+<TabItem value="external" label="上传至外部Stage">
 
 ```sql
 CREATE STAGE my_external_stage
@@ -121,9 +121,9 @@ CONNECTION = (
 PRESIGN UPLOAD @my_external_stage/books.parquet;
 ```
 
-结果：
+结果:
 
-````
+```
 ┌─────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 │ Name    │ Value                                                                                                                                                                                                                                                                                                                             │
 ├─────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
@@ -133,9 +133,9 @@ PRESIGN UPLOAD @my_external_stage/books.parquet;
 └─────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```shell
 curl -X PUT -T books.parquet "http://127.0.0.1:9000/databend/books.parquet?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ROOTUSER%2F20230628%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20230628T040959Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=<signature...>"
-````
+```
 
-检查 Stage 中的文件
+检查暂存文件：
 
 ```sql
 LIST @my_external_stage;
@@ -156,11 +156,11 @@ LIST @my_external_stage;
 
 ### 使用 PUT 命令上传
 
-以下示例演示如何使用 BendSQL 通过 PUT 命令上传样本文件（[books.parquet](https://datafuse-1253727613.cos.ap-hongkong.myqcloud.com/data/books.parquet)）到用户 Stage、内部 Stage 和外部 Stage。
+以下示例展示了如何使用 BendSQL 将示例文件（[books.parquet](https://datafuse-1253727613.cos.ap-hongkong.myqcloud.com/data/books.parquet)）上传到用户暂存区、内部暂存区和外部暂存区。
 
 <Tabs groupId="PUT">
 
-<TabItem value="user" label="上传到用户 Stage">
+<TabItem value="user" label="上传到用户暂存区">
 
 ```sql
 PUT fs:///Users/eric/Documents/books.parquet @~
@@ -176,7 +176,7 @@ PUT fs:///Users/eric/Documents/books.parquet @~
 └───────────────────────────────────────────────┘
 ```
 
-检查 Stage 中的文件
+检查暂存文件：
 
 ```sql
 LIST @~;
@@ -194,7 +194,7 @@ LIST @~;
 
 </TabItem>
 
-<TabItem value="internal" label="上传到内部 Stage">
+<TabItem value="internal" label="上传到内部暂存区">
 
 ```sql
 CREATE STAGE my_internal_stage;
@@ -214,7 +214,7 @@ PUT fs:///Users/eric/Documents/books.parquet @my_internal_stage;
 └───────────────────────────────────────────────┘
 ```
 
-检查 Stage 中的文件
+检查暂存文件：
 
 ```sql
 LIST @my_internal_stage;
@@ -231,7 +231,7 @@ LIST @my_internal_stage;
 ```
 
 </TabItem>
-<TabItem value="external" label="上传到外部 Stage">
+<TabItem value="external" label="上传到外部暂存区">
 
 ```
 CREATE STAGE my_external_stage
@@ -257,7 +257,7 @@ PUT fs:///Users/eric/Documents/books.parquet @my_external_stage
 └───────────────────────────────────────────────┘
 ```
 
-检查 Stage 中的文件
+检查暂存文件：
 
 ```sql
 LIST @my_external_stage;
@@ -278,11 +278,11 @@ LIST @my_external_stage;
 
 ### 使用 GET 命令下载
 
-以下示例演示如何使用 BendSQL 通过 GET 命令从用户 Stage、内部 Stage 和外部 Stage 下载样本文件（[books.parquet](https://datafuse-1253727613.cos.ap-hongkong.myqcloud.com/data/books.parquet)）。
+以下示例展示了如何使用 BendSQL 从用户暂存区、内部暂存区和外部暂存区下载示例文件（[books.parquet](https://datafuse-1253727613.cos.ap-hongkong.myqcloud.com/data/books.parquet)）。
 
 <Tabs groupId="GET">
 
-<TabItem value="user" label="从用户 Stage 下载">
+<TabItem value="user" label="从用户暂存区下载">
 
 ```sql
 LIST @~;
@@ -314,7 +314,7 @@ GET @~/ fs:///Users/eric/Downloads/fromStage/;
 
 </TabItem>
 
-<TabItem value="internal" label="从内部 Stage 下载">
+<TabItem value="internal" label="从内部暂存区下载">
 
 ```sql
 LIST @my_internal_stage;
@@ -345,7 +345,7 @@ GET @my_internal_stage/ fs:///Users/eric/Downloads/fromStage/;
 ```
 
 </TabItem>
-<TabItem value="external" label="从外部 Stage 下载">
+<TabItem value="external" label="从外部暂存区下载">
 
 ```sql
 LIST @my_external_stage;

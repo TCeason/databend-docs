@@ -2,69 +2,106 @@
 title: VACUUM DROP TABLE
 sidebar_position: 18
 ---
+
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.208"/>
+<FunctionDescription description="引入或更新版本：v1.2.368"/>
 
 import EEFeature from '@site/src/components/EEFeature';
 
 <EEFeature featureName='VACUUM DROP TABLE'/>
 
-The VACUUM DROP TABLE command helps save storage space by permanently removing data files of dropped tables, freeing up storage space, and enabling you to manage the process efficiently. It offers optional parameters to target specific databases, set retention times, preview, and limit the number of data files to be vacuumed. To list the dropped tables of a database, use [SHOW DROP TABLES](show-drop-tables.md).
+VACUUM DROP TABLE 命令通过永久移除已删除表的数据文件来帮助节省存储空间，释放存储空间，并使您能够高效地管理此过程。它提供了可选参数，以针对特定数据库、预览并限制要清理的数据文件数量。要列出数据库的已删除表，请使用 [SHOW DROP TABLES](show-drop-tables.md)。
 
-See also: [VACUUM TABLE](91-vacuum-table.md)
+另请参阅：[VACUUM TABLE](91-vacuum-table.md)
 
-### Syntax and Examples
+### 语法
 
 ```sql
-VACUUM DROP TABLE 
-    [FROM <database_name>] 
-    [RETAIN <n> HOURS] 
-    [DRY RUN] 
-    [LIMIT <file_count>]
+VACUUM DROP TABLE
+    [ FROM <database_name> ]
+    [ DRY RUN [SUMMARY] ]
+    [ LIMIT <file_count> ]
 ```
 
-- `FROM <database_name>`: This parameter restricts the search for dropped tables to a specific database. If not specified, the command will scan all databases, including those that have been dropped.
+- `FROM <database_name>`: 此参数将搜索已删除表的范围限制在特定数据库内。如果未指定，命令将扫描所有数据库，包括已删除的数据库。
 
-    ```sql title="Example:"
-    -- Remove dropped tables from the "default" database
-    VACUUM DROP TABLE FROM default;
+  ```sql title="示例："
+  -- 从 "default" 数据库中移除已删除的表
+  // highlight-next-line
+  VACUUM DROP TABLE FROM default;
 
-    -- Remove dropped tables from all databases
-    VACUUM DROP TABLE;
-    ```
+  -- 从所有数据库中移除已删除的表
+  // highlight-next-line
+  VACUUM DROP TABLE;
+  ```
 
-- `RETAIN <n> HOURS`: This parameter determines the retention status of data files for dropped tables, removing only those that were created more than *n* hours ago. In the absence of this parameter, the command defaults to the `retention_period` setting (usually set to 12 hours), leading to the removal of data files older than 12 hours during the vacuuming process.
+- `DRY RUN [SUMMARY]`: 当指定此参数时，数据文件不会被移除；相反，它会返回一个结果，显示如果未指定此参数，哪些数据文件将被移除。请参阅 [输出](#output) 部分中的示例。
 
-    ```sql title="Example:"
-    -- Remove data files older than 24 hours for dropped tables
-    VACUUM DROP TABLE RETAIN 24 HOURS;
-    ```
+- `LIMIT <file_count>`: 此参数可以与 DRY RUN 参数一起使用，也可以单独使用。与 DRY RUN 一起使用时，它限制 `DRY RUN` 结果中显示的数据文件数量。不与 `DRY RUN` 一起使用时，它限制要清理的数据文件数量。
 
-- `DRY RUN`: When this parameter is specified, data files will not be removed, instead, a list of up to 100 candidate files will be returned that would have been removed if the parameter was not used. This is useful when you want to preview the potential impact of the VACUUM DROP TABLE command before actually removing any data files. For example:
+### 输出
 
-    ```sql title="Example:"
-    -- Preview data files to be removed for dropped tables
-    VACUUM DROP TABLE DRY RUN;
+当指定 `DRY RUN` 或 `DRY RUN SUMMARY` 参数时，VACUUM DROP TABLE 命令会返回一个结果：
 
-    -- Preview data files to be removed for dropped tables in the "default" database
-    VACUUM DROP TABLE FROM default DRY RUN;
+- `DRY RUN`: 返回每个已删除表的候选文件列表（最多 1,000 个）及其大小（以字节为单位）。
+- `DRY RUN SUMMARY`: 返回每个已删除表要移除的文件总数及其总大小。
 
-    -- Preview data files to be removed for dropped tables older than 24 hours
-    VACUUM DROP TABLE RETAIN 24 HOURS DRY RUN;
-    ```
+```sql title='示例：'
+// highlight-next-line
+VACUUM DROP TABLE DRY RUN;
 
-- `LIMIT <file_count>`: This parameter limits the number of data files to be removed.
+┌──────────────────────────────────────────────────────────────────┐
+│  table │                     file                    │ file_size │
+├────────┼─────────────────────────────────────────────┼───────────┤
+│ b      │ 313ebd4da5cc493f9a7d491da8253ce2_v2.parquet │       210 │
+│ b      │ 737f2215b8ac4a268d5b7f2218273358_v2.parquet │       210 │
+│ b      │ 737f2215b8ac4a268d5b7f2218273358_v4.parquet │       340 │
+│ b      │ 313ebd4da5cc493f9a7d491da8253ce2_v4.parquet │       340 │
+│ b      │ last_snapshot_location_hint                 │        72 │
+│ b      │ 7e01fa5c2e0a495298942671447dc8cb_v4.mpk     │       515 │
+│ b      │ 2bc90e5be55c44258a736d27e5f7ac9e_v4.mpk     │       459 │
+│ b      │ 85e73803aabc4eb48774db3d932312dd_v4.mpk     │       534 │
+│ b      │ f0e507d0b825428dbfe57c8d8b620a15_v4.mpk     │       533 │
+│ c      │ cee790e76f6e4e92bc9dab3b9e873dcf_v2.parquet │       210 │
+│ c      │ 4bcb2cef3b6344cb951908ebee5ceb36_v2.parquet │       210 │
+│ c      │ cee790e76f6e4e92bc9dab3b9e873dcf_v4.parquet │       340 │
+│ c      │ 4bcb2cef3b6344cb951908ebee5ceb36_v4.parquet │       340 │
+│ c      │ last_snapshot_location_hint                 │        71 │
+│ c      │ 414fc6a8dc6746afbc576cf8fddfcdf3_v4.mpk     │       516 │
+│ c      │ 8d0d115c438244c295e3bfd50d556e39_v4.mpk     │       458 │
+│ c      │ 28e4f551cc634d3d8d7e648c3baa5f5c_v4.mpk     │       534 │
+│ c      │ 007b57e08eda419fbb451a3a3ed71de8_v4.mpk     │       533 │
+└──────────────────────────────────────────────────────────────────┘
+// highlight-next-line
+VACUUM DROP TABLE DRY RUN SUMMARY;
 
-    ```sql title="Example:"
-    -- Limit the removal to 5 data files and preview them
-    VACUUM DROP TABLE DRY RUN LIMIT 5;
+┌───────────────────────────────────┐
+│  table │ total_files │ total_size │
+├────────┼─────────────┼────────────┤
+│ b      │           9 │       3213 │
+│ c      │           9 │       3212 │
+└───────────────────────────────────┘
+```
 
-    Table    |File                                       |
-    ---------+-------------------------------------------+
-    employees|ee9cc37505974ea9a4258688c2426aab_v2.parquet|
-    employees|f67e87ab51fd4c869717230b1c9a0de4_v2.parquet|
-    employees|ee9cc37505974ea9a4258688c2426aab_v4.parquet|
-    employees|f67e87ab51fd4c869717230b1c9a0de4_v4.parquet|
-    employees|42978ea8ad9b468db5813d2d674d106b_v4.mpk    |
-    ```
+### 调整数据保留时间
+
+VACUUM DROP TABLE 命令会移除早于 `DATA_RETENTION_TIME_IN_DAYS` 设置的数据文件。可以根据需要调整此保留时间，例如调整为 2 天：
+
+```sql
+SET GLOBAL DATA_RETENTION_TIME_IN_DAYS = 2;
+```
+
+`DATA_RETENTION_TIME_IN_DAYS` 默认值为 1 天（24 小时），不同 Databend 版本的最大值如下：
+
+| 版本                     | 默认保留时间    | 最大保留时间    |
+| ------------------------ | --------------- | --------------- |
+| Databend 社区版和企业版  | 1 天（24 小时） | 90 天           |
+| Databend Cloud（基础版） | 1 天（24 小时） | 1 天（24 小时） |
+| Databend Cloud（商业版） | 1 天（24 小时） | 90 天           |
+
+要查看 `DATA_RETENTION_TIME_IN_DAYS` 的当前值：
+
+```sql
+SHOW SETTINGS LIKE 'DATA_RETENTION_TIME_IN_DAYS';
+```

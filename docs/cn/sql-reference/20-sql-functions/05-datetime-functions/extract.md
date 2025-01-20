@@ -4,57 +4,66 @@ title: EXTRACT
 
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.153"/>
+<FunctionDescription description="引入或更新：v1.2.153"/>
 
-Retrieves the designated portion of a date, time, or timestamp.
+提取日期、时间或时间戳的指定部分。
 
-See also: [DATE_PART](date-part.md)
+另请参阅：[DATE_PART](date-part.md)
 
-## Syntax
+## 语法
 
 ```sql
 EXTRACT( YEAR | QUARTER | MONTH | WEEK | DAY | HOUR | MINUTE | SECOND | DOW | DOY FROM <date_or_time_expr> )
 ```
 
-- DOW: Day of the Week.
-- DOY: Day of Year.
+- DOW：星期几。
+- DOY：一年中的第几天。
 
-## Return Type
+## 返回类型
 
-Integer.
+整数。
 
-## Examples
+## 示例
 
 ```sql
 SELECT NOW();
 
-now()                |
----------------------+
-2023-10-16 02:09:28.0|
+┌────────────────────────────┐
+│            now()           │
+├────────────────────────────┤
+│ 2024-05-22 03:00:35.977589 │
+└────────────────────────────┘
 
 SELECT EXTRACT(DAY FROM NOW());
 
-extract(day from now())|
------------------------+
-                     16|
+┌─────────────────────────┐
+│ extract(day from now()) │
+├─────────────────────────┤
+│                      22 │
+└─────────────────────────┘
 
--- October 16, 2023, is a Monday
 SELECT EXTRACT(DOW FROM NOW());
 
-extract(dow from now())|
------------------------+
-                      1|
+┌─────────────────────────┐
+│ extract(dow from now()) │
+├─────────────────────────┤
+│                       3 │
+└─────────────────────────┘
 
--- October 16, 2023, is the 289th day of the year
 SELECT EXTRACT(DOY FROM NOW());
 
-extract(doy from now())|
------------------------+
-                    289|
+┌─────────────────────────┐
+│ extract(doy from now()) │
+├─────────────────────────┤
+│                     143 │
+└─────────────────────────┘
 
 SELECT EXTRACT(MONTH FROM TO_DATE('2022-05-13'));
 
-extract(month from to_date('2022-05-13'))|
------------------------------------------+
-                                        5|
+┌───────────────────────────────────────────┐
+│ extract(month from to_date('2022-05-13')) │
+│                   UInt8                   │
+├───────────────────────────────────────────┤
+│                                         5 │
+└───────────────────────────────────────────┘
 ```

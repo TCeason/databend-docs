@@ -1,8 +1,8 @@
 ---
-title: Query Syntax
+title: 查询语法
 ---
 import IndexOverviewList from '@site/src/components/IndexOverviewList';
 
-This page provides reference information for the query syntax in Databend.
+本页提供 Databend 中查询语法的参考信息。
 
 <IndexOverviewList />

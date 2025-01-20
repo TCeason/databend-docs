@@ -2,28 +2,28 @@
 title: JSON_EXTRACT_PATH_TEXT
 ---
 
-Extracts value from a Json string by `path_name`.
-The value is returned as a `String` or `NULL` if either of the arguments is `NULL`.
-This function is equivalent to `to_varchar(GET_PATH(PARSE_JSON(JSON), PATH_NAME))`.
+通过 `path_name` 从 Json 字符串中提取值。
+如果任一参数为 `NULL`，则返回值为 `String` 或 `NULL`。
+此函数等效于 `to_varchar(GET_PATH(PARSE_JSON(JSON), PATH_NAME))`。
 
-## Syntax
+## 语法
 
 ```sql
 JSON_EXTRACT_PATH_TEXT( <expr>, <path_name> )
 ```
 
-## Arguments
+## 参数
 
-| Arguments     | Description                                                      |
-|---------------|------------------------------------------------------------------|
-| `<expr>`      | The Json String value                                            |
-| `<path_name>` | The String value that consists of a concatenation of field names |
+| 参数          | 描述                                                         |
+|---------------|--------------------------------------------------------------|
+| `<expr>`      | Json 字符串值                                                |
+| `<path_name>` | 由字段名称连接组成的字符串值                                 |
 
-## Return Type
+## 返回类型
 
 String
 
-## Examples
+## 示例
 
 ```sql
 SELECT json_extract_path_text('{"k1":[0,1,2], "k2":{"k3":3,"k4":4}}', 'k1[0]');

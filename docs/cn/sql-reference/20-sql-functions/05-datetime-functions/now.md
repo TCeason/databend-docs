@@ -2,25 +2,32 @@
 title: NOW
 ---
 
-Returns the current date and time.
+返回当前日期和时间。
 
-## Syntax
+## 语法
 
 ```sql
 NOW()
 ```
 
-## Return Type
+## 返回类型
 
-`TIMESTAMP`, returns date and time in “YYYY-MM-DD hh:mm:ss.ffffff” format.
+TIMESTAMP
 
-## Examples
+## 别名
+
+- [CURRENT_TIMESTAMP](current-timestamp.md)
+
+## 示例
+
+此示例返回当前日期和时间：
 
 ```sql
-SELECT NOW();
-+----------------------------+
-| NOW()                      |
-+----------------------------+
-| 2022-10-17 08:13:58.751449 |
-+----------------------------+
+SELECT CURRENT_TIMESTAMP(), NOW();
+
+┌─────────────────────────────────────────────────────────┐
+│     current_timestamp()    │            now()           │
+├────────────────────────────┼────────────────────────────┤
+│ 2024-01-29 04:38:12.584359 │ 2024-01-29 04:38:12.584417 │
+└─────────────────────────────────────────────────────────┘
 ```

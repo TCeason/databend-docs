@@ -4,17 +4,17 @@ sidebar_position: 3
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.116"/>
+<FunctionDescription description="引入或更新版本：v1.2.116"/>
 
-Drops a user-defined function.
+删除一个用户自定义函数。
 
-## Syntax
+## 语法
 
 ```sql
-DROP FUNCTION [IF EXISTS] <function_name>
+DROP FUNCTION [ IF EXISTS ] <function_name>
 ```
 
-## Examples
+## 示例
 
 ```sql
 DROP FUNCTION a_plus_3;

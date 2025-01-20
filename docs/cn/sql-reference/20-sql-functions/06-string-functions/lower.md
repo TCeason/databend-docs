@@ -2,32 +2,30 @@
 title: LOWER
 ---
 
-Returns the string str with all characters changed to lowercase.
+返回一个将所有字符转换为小写的字符串。
 
-## Syntax
+## 语法
 
 ```sql
-LOWER(<str>);
+LOWER(<str>)
 ```
 
-## Arguments
+## 别名
 
-| Arguments | Description                |
-|-----------|----------------------------|
-| `<str>`   | The string to be lowercase |
+- [LCASE](lcase.md)
 
+## 返回类型
 
-## Return Type
+VARCHAR
 
-`VARCHAR`
-
-## Examples
+## 示例
 
 ```sql
-SELECT LOWER('Hello, World!')
-+------------------------+
-| lower('Hello, World!') |
-+------------------------+
-| hello, world!          |
-+------------------------+
+SELECT LOWER('Hello, Databend!'), LCASE('Hello, Databend!');
+
+┌───────────────────────────────────────────────────────┐
+│ lower('hello, databend!') │ lcase('hello, databend!') │
+├───────────────────────────┼───────────────────────────┤
+│ hello, databend!          │ hello, databend!          │
+└───────────────────────────────────────────────────────┘
 ```

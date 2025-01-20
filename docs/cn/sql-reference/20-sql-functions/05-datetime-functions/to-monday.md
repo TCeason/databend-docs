@@ -2,34 +2,33 @@
 title: TO_MONDAY
 ---
 
-Round down a date or date with time (timestamp/datetime) to the nearest Monday.
-Returns the date.
+将日期或带时间的日期（时间戳/日期时间）向下舍入到最近的周一。
+返回日期。
 
-## Syntax
+## 语法
 
 ```sql
 TO_MONDAY(<expr>)
 ```
 
-## Arguments
+## 参数
 
-| Arguments   | Description |
+| 参数        | 描述        |
 | ----------- | ----------- |
-| `<expr>` | date/timestamp |
+| `<expr>` | 日期/时间戳 |
 
-## Return Type
+## 返回类型
 
-`DATE`, returns date in “YYYY-MM-DD” format.
+`DATE`，返回格式为“YYYY-MM-DD”的日期。
 
-## Examples
+## 示例
 
 ```sql
 SELECT
-    to_monday('2023-11-12 09:38:18.165575')
+    to_monday('2023-11-12 09:38:18.165575');
 
 ┌─────────────────────────────────────────┐
 │ to_monday('2023-11-12 09:38:18.165575') │
-│                   Date                  │
 ├─────────────────────────────────────────┤
 │ 2023-11-06                              │
 └─────────────────────────────────────────┘

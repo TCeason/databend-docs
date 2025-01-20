@@ -3,26 +3,22 @@ title: CREATE DATABASE
 sidebar_position: 1
 ---
 
-Create a database.
+import FunctionDescription from '@site/src/components/FunctionDescription';
 
-Please note that creating a database from a share is part of the Share feature in Databend Cloud. For more information, see [Share](../08-share/index.md).
+<FunctionDescription description="Introduced or updated: v1.2.339"/>
 
-## Syntax
+创建一个数据库。
+
+## 语法
 
 ```sql
-CREATE DATABASE [IF NOT EXISTS] <database_name> [FROM SHARE <share_name>]
+CREATE [ OR REPLACE ] DATABASE [ IF NOT EXISTS ] <database_name>
 ```
 
-## Examples
+## 示例
 
-The following example creates a database named `test`:
+以下示例创建了一个名为 `test` 的数据库：
 
 ```sql
 CREATE DATABASE test;
-```
-
-The following example creates a database named `test` from the share `myshare`:
-
-```sql
-CREATE DATABASE test FROM SHARE t;
 ```

@@ -5,21 +5,21 @@ sidebar_position: 3
 
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.45"/>
+<FunctionDescription description="引入或更新版本：v1.2.45"/>
 
 import EEFeature from '@site/src/components/EEFeature';
 
 <EEFeature featureName='MASKING POLICY'/>
 
-Deletes an existing masking policy from Databend. When you drop a masking policy, it is removed from Databend, and its associated masking rules are no longer in effect. Please note that, before dropping a masking policy, ensure that this policy is not associated with any columns.
+从 Databend 中删除现有的数据脱敏策略。当你删除一个数据脱敏策略时，它将从 Databend 中移除，并且其关联的脱敏规则将不再生效。请注意，在删除数据脱敏策略之前，请确保该策略未与任何列关联。
 
-## Syntax
+## 语法
 
 ```sql
-DROP MASKING POLICY [IF EXISTS] <policy_name>
+DROP MASKING POLICY [ IF EXISTS ] <policy_name>
 ```
 
-## Examples
+## 示例
 
 ```sql
 CREATE MASKING POLICY email_mask

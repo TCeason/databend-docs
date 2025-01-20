@@ -2,32 +2,32 @@
 title: TO_START_OF_FIFTEEN_MINUTES
 ---
 
-Rounds down the date with time (timestamp/datetime) to the start of the fifteen-minute interval.
-## Syntax
+将日期和时间（时间戳/日期时间）向下舍入到十五分钟间隔的开始。
+
+## 语法
 
 ```sql
 TO_START_OF_FIFTEEN_MINUTES(<expr>)
 ```
 
-## Arguments
+## 参数
 
-| Arguments | Description |
-|-----------|-------------|
-| `<expr>`  | timestamp   |
+| 参数       | 描述     |
+|-----------|---------|
+| `<expr>`  | 时间戳   |
 
-## Return Type
+## 返回类型
 
-`TIMESTAMP`, returns date in “YYYY-MM-DD hh:mm:ss.ffffff” format.
+`TIMESTAMP`，返回日期格式为“YYYY-MM-DD hh:mm:ss.ffffff”。
 
-## Examples
+## 示例
 
 ```sql
 SELECT
-  to_start_of_fifteen_minutes('2023-11-12 09:38:18.165575')
+  to_start_of_fifteen_minutes('2023-11-12 09:38:18.165575');
 
 ┌───────────────────────────────────────────────────────────┐
 │ to_start_of_fifteen_minutes('2023-11-12 09:38:18.165575') │
-│                         Timestamp                         │
 ├───────────────────────────────────────────────────────────┤
 │ 2023-11-12 09:30:00                                       │
 └───────────────────────────────────────────────────────────┘

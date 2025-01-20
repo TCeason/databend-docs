@@ -3,15 +3,15 @@ title: SHOW STAGES
 sidebar_position: 6
 ---
 
-Returns a list of the created stages. The output list does not include the user stage.
+返回已创建的 stages 列表。输出列表不包括用户 stage。
 
-## Syntax
+## 语法
 
 ```sql
 SHOW STAGES;
 ```
 
-## Examples
+## 示例
 
 ```sql
 SHOW STAGES;

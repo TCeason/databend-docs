@@ -2,148 +2,185 @@
 title: INSERT
 ---
 
-Writes data into a table.
+将一行或多行插入到表中。
 
-:::tip atomic operations
-Databend ensures data integrity with atomic operations. Inserts, updates, replaces, and deletes either succeed completely or fail entirely.
+:::tip 原子操作
+Databend 通过原子操作确保数据完整性。插入、更新、替换和删除操作要么完全成功，要么完全失败。
 :::
 
-## Insert Direct Values
+另请参阅：[INSERT (多表)](dml-insert-multi.md)
 
-### Syntax
+## 语法
 
 ```sql
-INSERT INTO|OVERWRITE [db.]table [(c1, c2, c3)] VALUES (v11, v12, v13), (v21, v22, v23), ...
+INSERT { OVERWRITE | INTO } <table>
+    -- 可选地指定要插入的列
+    ( <column> [ , ... ] )
+    -- 插入选项：
+    {
+        -- 直接插入值或默认值
+        VALUES ( <value> | DEFAULT ) [ , ... ] |
+        -- 插入查询结果
+        SELECT ...
+    }
 ```
 
-### Examples
+| 参数      | 描述                                                                 |
+|-----------|----------------------------------------------------------------------|
+| OVERWRITE | 指示在插入之前是否应截断现有数据。                                     |
+| VALUES    | 允许直接插入特定值或列的默认值。                                      |
+
+## 示例
+
+### 示例-1：使用 OVERWRITE 插入值
+
+在此示例中，使用 INSERT OVERWRITE 语句截断 employee 表并插入新数据，用提供的值替换所有现有记录，为 ID 为 100 的员工插入新数据。
 
 ```sql
-CREATE TABLE test(a INT UNSIGNED, b Varchar);
+CREATE TABLE employee (
+    employee_id INT,
+    employee_name VARCHAR(50)
+);
 
-INSERT INTO test(a,b) VALUES(888, 'stars');
-INSERT INTO test VALUES(1024, 'stars');
+-- 向 employee 表插入初始数据
+INSERT INTO employee(employee_id, employee_name) VALUES
+    (101, 'John Doe'),
+    (102, 'Jane Smith');
 
-SELECT * FROM test;
-+------+-------+
-| a    | b     |
-+------+-------+
-|  888 | stars |
-| 1024 | stars |
-+------+-------+
+-- 使用 OVERWRITE 插入新数据
+INSERT OVERWRITE employee VALUES (100, 'John Johnson');
 
-INSERT OVERWRITE test VALUES(2048, 'stars');
-SELECT * FROM test;
-+------+-------+
-| a    | b     |
-+------+-------+
-| 2048 | stars |
-+------+-------+
+-- 显示 employee 表的内容
+SELECT * FROM employee;
+
+┌────────────────────────────────────┐
+│   employee_id   │   employee_name  │
+├─────────────────┼──────────────────┤
+│             100 │ John Johnson     │
+└────────────────────────────────────┘
 ```
 
-## Insert Query Results
+### 示例-2：插入查询结果
 
-When inserting the results of a SELECT statement, the mapping of columns follows their positions in the SELECT clause. Therefore, the number of columns in the SELECT statement must be equal to or greater than the number of columns in the INSERT table. In cases where the data types of the columns in the SELECT statement and the INSERT table differ, type casting will be performed as needed.
-
-### Syntax
+当插入 SELECT 语句的结果时，列的映射遵循它们在 SELECT 子句中的位置。因此，SELECT 语句中的列数必须等于或大于 INSERT 表中的列数。在 SELECT 语句和 INSERT 表中的列数据类型不同的情况下，将根据需要进行类型转换。
 
 ```sql
-INSERT INTO [db.]table [(c1, c2, c3)] SELECT ...
+-- 创建一个名为 'employee_info' 的表，包含三列：'employee_id'、'employee_name' 和 'department'
+CREATE TABLE employee_info (
+    employee_id INT,
+    employee_name VARCHAR(50),
+    department VARCHAR(50)
+);
+
+-- 向 'employee_info' 表插入一条记录
+INSERT INTO employee_info VALUES ('101', 'John Doe', 'Marketing');
+
+-- 创建一个名为 'employee_data' 的表，包含三列：'ID'、'Name' 和 'Dept'
+CREATE TABLE employee_data (
+    ID INT,
+    Name VARCHAR(50),
+    Dept VARCHAR(50)
+);
+
+-- 将 'employee_info' 中的数据插入到 'employee_data' 中
+INSERT INTO employee_data SELECT * FROM employee_info;
+
+-- 显示 'employee_data' 表的内容
+SELECT * FROM employee_data;
+
+┌───────────────────────────────────────────────────────┐
+│        id       │       name       │       dept       │
+├─────────────────┼──────────────────┼──────────────────┤
+│             101 │ John Doe         │ Marketing        │
+└───────────────────────────────────────────────────────┘
 ```
 
-### Examples
+此示例演示创建一个名为 "sales_summary" 的汇总表，用于存储聚合的销售数据，例如每个产品的总销售数量和收入，通过从销售表中聚合信息：
 
 ```sql
-CREATE TABLE select_table(a VARCHAR, b VARCHAR, c VARCHAR);
-INSERT INTO select_table VALUES('1','11','abc');
+-- 创建一个用于销售数据的表
+CREATE TABLE sales (
+    product_id INT,
+    quantity_sold INT,
+    revenue DECIMAL(10, 2)
+);
 
-SELECT * FROM select_table;
-+------+------+------+
-| a    | b    | c    |
-+------+------+------+
-| 1    | 11   | abc  |
-+------+------+------+
+-- 插入一些示例销售数据
+INSERT INTO sales (product_id, quantity_sold, revenue) VALUES
+    (1, 100, 500.00),
+    (2, 150, 750.00),
+    (1, 200, 1000.00),
+    (3, 50, 250.00);
 
-CREATE TABLE test(c1 TINTINT UNSIGNED, c2 BIGINT UNSIGNED, c3 VARCHAR);
-INSERT INTO test SELECT * FROM select_table;
+-- 创建一个汇总表以存储聚合的销售数据
+CREATE TABLE sales_summary (
+    product_id INT,
+    total_quantity_sold INT,
+    total_revenue DECIMAL(10, 2)
+);
 
-SELECT * from test;
-+------+------+------+
-| c1   | c2   | c3   |
-+------+------+------+
-|    1 |   11 | abc  |
-+------+------+------+
+-- 将聚合的销售数据插入到汇总表中
+INSERT INTO sales_summary (product_id, total_quantity_sold, total_revenue)
+SELECT 
+    product_id,
+    SUM(quantity_sold) AS total_quantity_sold,
+    SUM(revenue) AS total_revenue
+FROM 
+    sales
+GROUP BY 
+    product_id;
+
+-- 显示 sales_summary 表的内容
+SELECT * FROM sales_summary;
+
+┌──────────────────────────────────────────────────────────────────┐
+│    product_id   │ total_quantity_sold │       total_revenue      │
+├─────────────────┼─────────────────────┼──────────────────────────┤
+│               1 │                 300 │ 1500.00                  │
+│               3 │                  50 │ 250.00                   │
+│               2 │                 150 │ 750.00                   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-Aggregate Example:
+### 示例-3：插入默认值
+
+此示例说明创建一个名为 "staff_records" 的表，并为 department 和 status 等列设置默认值。然后插入数据，展示默认值的使用。
 
 ```sql
--- create table
-CREATE TABLE base_table(a INT);
-CREATE TABLE aggregate_table(b INT);
+-- 创建一个表 'staff_records'，包含列 'employee_id'、'department'、'salary' 和 'status'，并设置默认值
+CREATE TABLE staff_records (
+    employee_id INT NULL,
+    department VARCHAR(50) DEFAULT 'HR',
+    salary FLOAT,
+    status VARCHAR(10) DEFAULT 'Active'
+);
 
--- insert some data to base_table
-INSERT INTO base_table VALUES(1),(2),(3),(4),(5),(6);
-
--- insert into aggregate_table from the aggregation
-INSERT INTO aggregate_table SELECT SUM(a) FROM base_table GROUP BY a%3;
-
-SELECT * FROM aggregate_table ORDER BY b;
-+------+
-| b    |
-+------+
-|    5 |
-|    7 |
-|    9 |
-+------+
-```
-
-## Insert Default Values
-
-Databend allows you to use the INSERT INTO statement to add data into a table, specifying values or defaults for columns as needed.
-
-### Syntax
-
-```sql
-INSERT INTO [db.]table [(c1, c2, c3)] VALUES (v1|DEFAULT, v2|DEFAULT, v3|DEFAULT) ...
-```
-
-### Examples
-
-```sql
-CREATE TABLE t_insert_default(a int null, b int default 2, c float, d varchar default 'd');
-
-INSERT INTO t_insert_default
+-- 向 'staff_records' 插入数据，使用默认值
+INSERT INTO staff_records
 VALUES
-    (default, default, default, default),
-    (1, default, 1.0, default),
-    (3, 3, 3.0, default),
-    (4, 4, 4.0, 'a');
+    (DEFAULT, DEFAULT, DEFAULT, DEFAULT),
+    (101, DEFAULT, 50000.00, DEFAULT),
+    (102, 'Finance', 60000.00, 'Inactive'),
+    (103, 'Marketing', 70000.00, 'Active');
 
-SELECT * FROM t_insert_default;
-+------+------+------+------+
-| a    | b    | c    | d    |
-+------+------+------+------+
-| NULL |    2 |  0.0 | d    |
-|    1 |    2 |  1.0 | d    |
-|    3 |    3 |  3.0 | d    |
-|    4 |    4 |  4.0 | a    |
-+------+------+------+------+
+-- 显示 'staff_records' 表的内容
+SELECT * FROM staff_records;
+
+┌───────────────────────────────────────────────────────────────────────────┐
+│   employee_id   │    department    │       salary      │      status      │
+├─────────────────┼──────────────────┼───────────────────┼──────────────────┤
+│            NULL │ HR               │              NULL │ Active           │
+│             101 │ HR               │             50000 │ Active           │
+│             102 │ Finance          │             60000 │ Inactive         │
+│             103 │ Marketing        │             70000 │ Active           │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Insert with Staged Files
+### 示例-4：使用 Staged 文件插入
 
-Databend enables you to insert data into a table from staged files with the INSERT INTO statement. This is achieved through Databend's capacity to [Query Staged Files](/guides/load-data/transform/querying-stage) and subsequently incorporate the query result into the table.
+Databend 允许您使用 INSERT INTO 语句从 staged 文件中将数据插入到表中。这是通过 Databend 的 [查询 Staged 文件](/guides/load-data/transform/querying-stage) 功能实现的，然后将查询结果插入到表中。
 
-### Syntax
-
-```sql
-INSERT INTO [db.]table [(c1, c2, c3)] SELECT ...
-```
-
-### Examples
-
-1. Create a table called `sample`:
+1. 创建一个名为 `sample` 的表：
 
 ```sql
 CREATE TABLE sample
@@ -155,9 +192,9 @@ CREATE TABLE sample
 );
 ```
 
-2. Set up an internal stage with sample data
+2. 设置一个包含示例数据的内部 stage
 
-We'll establish an internal stage named `mystage` and then populate it with sample data.
+我们将创建一个名为 `mystage` 的内部 stage，然后填充示例数据。
 
 ```sql
 CREATE STAGE mystage;
@@ -178,10 +215,10 @@ FROM
 FILE_FORMAT = (TYPE = PARQUET);
 ```
 
-3. Insert data from the staged Parquet file with `INSERT INTO`
+3. 使用 `INSERT INTO` 从 staged Parquet 文件插入数据
 
 :::tip
-You can specify the file format and various copy-related settings with the FILE_FORMAT and COPY_OPTIONS available in the [COPY INTO](dml-copy-into-table.md) command. When `purge` is set to `true`, the original file will only be deleted if the data update is successful. 
+您可以使用 [COPY INTO](dml-copy-into-table.md) 命令中的 FILE_FORMAT 和 COPY_OPTIONS 指定文件格式和各种复制相关设置。当 `purge` 设置为 `true` 时，只有在数据更新成功时才会删除原始文件。
 :::
 
 ```sql
@@ -196,17 +233,16 @@ FROM
     (FILE_FORMAT => 'parquet');
 ```
 
-4. Verify the data insert
+4. 验证数据插入
 
 ```sql
 SELECT * FROM sample;
 ```
 
-The results should be:
+结果应为：
 ```sql
 ┌─────────────────────────────────────────────────────────────────────────┐
 │        id       │       city       │      score      │      country     │
-│ Nullable(Int32) │ Nullable(String) │ Nullable(Int32) │ Nullable(String) │
 ├─────────────────┼──────────────────┼─────────────────┼──────────────────┤
 │               1 │ Chengdu          │              80 │ China            │
 │               3 │ Chongqing        │              90 │ China            │

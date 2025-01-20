@@ -2,15 +2,15 @@
 title: NOT LIKE
 ---
 
-Pattern not matching using an SQL pattern. Returns 1 (TRUE) or 0 (FALSE). If either expr or pat is NULL, the result is NULL.
+使用SQL模式进行模式不匹配。返回1（TRUE）或0（FALSE）。如果expr或pat为NULL，则结果为NULL。
 
-## Syntax
+## 语法
 
 ```sql
 <expr> NOT LIKE <pattern>
 ```
 
-## Examples
+## 示例
 
 ```sql
 SELECT name, category FROM system.functions WHERE name like 'tou%' AND name not like '%64' ORDER BY name;

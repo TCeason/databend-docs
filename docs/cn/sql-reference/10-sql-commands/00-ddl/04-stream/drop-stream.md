@@ -4,21 +4,21 @@ sidebar_position: 3
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.223"/>
+<FunctionDescription description="引入或更新于：v1.2.223"/>
 
 import EEFeature from '@site/src/components/EEFeature';
 
 <EEFeature featureName='STREAM'/>
 
-Deletes an existing stream.
+删除一个已存在的流。
 
-## Syntax
+## 语法
 
 ```sql
-DROP STREAM [IF EXISTS] [<database_name>.]<stream_name>
+DROP STREAM [ IF EXISTS ] [ <database_name>. ]<stream_name>
 ```
 
-## Examples
+## 示例
 
 ```sql
 DROP STREAM books_stream_2023;

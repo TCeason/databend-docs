@@ -2,32 +2,33 @@
 title: ATTACH TABLE
 sidebar_position: 6
 ---
+
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.180"/>
+<FunctionDescription description="引入或更新于：v1.2.549"/>
 
-Attaches an existing table to another one. The command moves the data and schema of a table from one database to another, but without actually copying the data. Instead, it creates a link that points to the original table data for accessing the data.
+import EEFeature from '@site/src/components/EEFeature';
 
-Attach Table enables you to seamlessly connect a table in the cloud service platform to an existing table deployed in a private deployment environment without the need to physically move the data. This is particularly useful when you want to migrate data from a private deployment of Databend to [Databend Cloud](https://www.databend.com) while minimizing the data transfer overhead.
+<EEFeature featureName='ATTACH TABLE'/>
 
-Attach Table provides a seamless connection between source tables and attached tables, with the data synchronization mechanism operating differently depending on the mode:
+将现有表附加到另一个表。该命令将表的数据和模式从一个数据库移动到另一个数据库，但实际上并不复制数据。相反，它创建一个指向原始表数据的链接以访问数据。
 
-- In non-read-only mode, changes in the source table are instantly reflected in the attached table, and you can update the attached table as needed. However, it's essential to note that these updates won't sync back to the source table. See [Example 1: Attaching Table in Databend Cloud](#example-1-attaching-table-in-databend-cloud) for an example.
+Attach Table 使您能够无缝地将云服务平台中的表连接到私有部署环境中已存在的表，而无需物理移动数据。这在您希望将数据从私有部署的 Databend 迁移到 [Databend Cloud](https://www.databend.com) 时特别有用，同时最大限度地减少数据传输开销。
 
-- In read-only mode, changes in the source table are also instantly reflected in the attached table. However, the attached table exclusively serves for querying purposes, with no update capabilities. See [Example 2: Attaching Table in READ_ONLY Mode](#example-2-attaching-table-in-read_only-mode) for an example.
+附加的表以 READ_ONLY 模式运行。在此模式下，源表中的更改会立即反映在附加表中。然而，附加表仅用于查询目的，不支持更新。这意味着在附加表上不允许执行 INSERT、UPDATE 和 DELETE 操作；只能执行 SELECT 查询。
 
-## Syntax
+## 语法
 
 ```sql
-ATTACH TABLE <target_table_name> '<source_table_data_URI>' 
-CONNECTION=(<connection_parameters>) [READ_ONLY]
+ATTACH TABLE <target_table_name> '<source_table_data_URI>'
+CONNECTION = ( <connection_parameters> )
 ```
 
-- `<source_table_data_URI>` represents the path to the source table's data. For S3-like object storage, the format is `s3://<bucket-name>/<database_ID>/<table_ID>`, for example, *s3://databend-toronto/1/23351/*, which represents the exact path to the table folder within the bucket.
+- `<source_table_data_URI>` 表示源表数据的路径。对于类似 S3 的对象存储，格式为 `s3://<bucket-name>/<database_ID>/<table_ID>`，例如 _s3://databend-toronto/1/23351/_，它表示存储桶中表文件夹的确切路径。
 
-  ![Alt text](@site/docs/public/img/sql/attach.png)
+  ![Alt text](/img/sql/attach.png)
 
-  To obtain the database ID and table ID of a table, use the [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md) function. In the example below, the part **1/23351/** in the value of *snapshot_location* indicates that the database ID is **1**, and the table ID is **23351**.
+  要获取表的数据库 ID 和表 ID，请使用 [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md) 函数。在下面的示例中，_snapshot_location_ 值中的 **1/23351/** 部分表示数据库 ID 为 **1**，表 ID 为 **23351**。
 
   ```sql
   SELECT * FROM FUSE_SNAPSHOT('default', 'employees');
@@ -47,128 +48,15 @@ CONNECTION=(<connection_parameters>) [READ_ONLY]
   timestamp           |2023-07-11 05:38:27.0                              |
   ```
 
-- `CONNECTION` specifies the connection parameters required for establishing a link to the object storage where the source table's data is stored. The connection parameters vary for different storage services based on their specific requirements and authentication mechanisms. For more information, see [Connection Parameters](../../../00-sql-reference/51-connect-parameters.md).
+- `CONNECTION` 指定建立与存储源表数据的对象存储链接所需的连接参数。不同存储服务的连接参数根据其特定要求和认证机制而有所不同。有关更多信息，请参见 [连接参数](../../../00-sql-reference/51-connect-parameters.md)。
 
-- `READ_ONLY` is an optional parameter that, when included, restricts data modification operations (e.g., INSERT, UPDATE, DELETE) on the attached table (<target_table_name>), allowing only SELECT queries.
+## 示例
 
-  :::note
-  In read-only mode, if there are schema changes in the source table, tables already attached must be dropped and then reattached. 
-  :::
+本示例展示了如何将 Databend Cloud 中的新表与 Databend 中的现有表链接，该表将数据存储在名为 "databend-toronto" 的 Amazon S3 存储桶中。
 
-## Examples
+#### 步骤 1. 在 Databend 中创建表
 
-### Example 1: Attaching Table in Databend Cloud
-
-This example illustrates how to link a new table in Databend Cloud with an existing table in Databend, which stores data within an Amazon S3 bucket named "databend-toronto".
-
-#### Step 1. Creating Table in Databend
-
-Create a table named "employees" and insert some sample data:
-
-```sql title='Databend:'
-CREATE TABLE employees (
-  id INT,
-  name VARCHAR(50),
-  salary DECIMAL(10, 2)
-) ;
-
-INSERT INTO employees (id, name, salary) VALUES
-  (1, 'John Doe', 5000.00),
-  (2, 'Jane Smith', 6000.00),
-  (3, 'Mike Johnson', 7000.00);
-```
-
-#### Step 2. Obtaining Database ID and Table ID
-
-Use the [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md) function to obtain the database ID and table ID. The result below indicates that the database ID is **1**, and the table ID is **216**:
-
-```sql title='Databend:'
-SELECT * FROM FUSE_SNAPSHOT('default', 'employees');
-
-┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│            snapshot_id           │                 snapshot_location                 │ format_version │ previous_snapshot_id │ segment_count │ block_count │ row_count │ bytes_uncompressed │ bytes_compressed │ index_size │          timestamp         │
-├──────────────────────────────────┼───────────────────────────────────────────────────┼────────────────┼──────────────────────┼───────────────┼─────────────┼───────────┼────────────────────┼──────────────────┼────────────┼────────────────────────────┤
-│ cede9d925e7c41f5b29326c2c189a212 │ 1/216/_ss/cede9d925e7c41f5b29326c2c189a212_v4.mpk │              4 │ NULL                 │             1 │           1 │         3 │                125 │              590 │        531 │ 2023-10-31 19:51:05.832761 │
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-When you access the bucket page on Amazon S3, you'll observe that the data is organized within the path `databend-toronto` > `1` > `216`, like this:
-
-![Alt text](@site/docs/public/img/sql/attach-table-1.png)
-
-#### Step 3. Linking Table in Databend Cloud
-
-Sign in to Databend Cloud and run the following command in a worksheet to link a table named "employees_backup":
-
-```sql title='Databend Cloud:'
-ATTACH TABLE employees_backup 's3://databend-toronto/1/216/' CONNECTION = (
-  AWS_KEY_ID = '<your_aws_key_id>',
-  AWS_SECRET_KEY = '<your_aws_secret_key>'
-);
-```
-
-To verify the success of the link, run the following query in Databend Cloud:
-
-```sql title='Databend Cloud:'
-SELECT * FROM employees_backup;
-
--- Expected result:
-┌───────────────────────────────────────────────────────────────┐
-│        id       │       name       │          salary          │
-├─────────────────┼──────────────────┼──────────────────────────┤
-│               1 │ John Doe         │ 5000.00                  │
-│               2 │ Jane Smith       │ 6000.00                  │
-│               3 │ Mike Johnson     │ 7000.00                  │
-└───────────────────────────────────────────────────────────────┘
-```
-
-You're all set! If you update the source table in Databend, you can observe the same changes reflected in the target table on Databend Cloud. For example, if you update the name "Mike Johnson" to "Eric Johnson" in the source table "employees":
-
-```sql title='Databend:'
-UPDATE employees
-SET name = 'Eric Johnson'
-WHERE name = 'Mike Johnson';
-```
-
-You can see that the updates are synced to the attached table in Databend Cloud:
-
-```sql title='Databend Cloud:'
-SELECT * FROM employees_backup;
-
--- Expected result:
-┌───────────────────────────────────────────────────────────────┐
-│        id       │       name       │          salary          │
-├─────────────────┼──────────────────┼──────────────────────────┤
-│               1 │ John Doe         │ 5000.00                  │
-│               2 │ Jane Smith       │ 6000.00                  │
-│               3 │ Eric Johnson     │ 7000.00                  │
-└───────────────────────────────────────────────────────────────┘
-```
-
-You can also update the target table in Databend Cloud, but the changes will not be synced to the source table in Databend. For example, if you update the salary of  "John Doe" to 5,500 in the target table "employees_backup":
-
-```sql title='Databend Cloud:'
-UPDATE employees_backup
-SET salary = 5500
-WHERE name = 'John Doe';
-```
-
-The salary of  "John Doe" will remain unchanged in the source table "employees":
-
-```sql title='Databend:'
-SELECT salary FROM employees WHERE name = 'John Doe';
-
--- Expected result:
-5000.00
-```
-
-### Example 2: Attaching Table in READ_ONLY Mode
-
-This example illustrates how to link a new table in Databend Cloud in READ_ONLY mode with an existing table in Databend, which stores data within an Amazon S3 bucket named "databend-toronto".
-
-#### Step 1. Creating Table in Databend
-
-Create a table named "population" and insert some sample data:
+创建一个名为 "population" 的表并插入一些示例数据：
 
 ```sql title='Databend:'
 CREATE TABLE population (
@@ -182,9 +70,9 @@ INSERT INTO population (city, population) VALUES
   ('Vancouver', 631486);
 ```
 
-#### Step 2. Obtaining Database ID and Table ID
+#### 步骤 2. 获取数据库 ID 和表 ID
 
-Use the [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md) function to obtain the database ID and table ID. The result below indicates that the database ID is **1**, and the table ID is **556**:
+使用 [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md) 函数获取数据库 ID 和表 ID。以下结果表明数据库 ID 为 **1**，表 ID 为 **556**：
 
 ```sql title='Databend:'
 SELECT * FROM FUSE_SNAPSHOT('default', 'population');
@@ -196,27 +84,27 @@ SELECT * FROM FUSE_SNAPSHOT('default', 'population');
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-When you access the bucket page on Amazon S3, you'll observe that the data is organized within the path `databend-toronto` > `1` > `556`, like this:
+当您访问 Amazon S3 上的存储桶页面时，您会观察到数据被组织在路径 `databend-toronto` > `1` > `556` 中，如下所示：
 
-![Alt text](@site/docs/public/img/sql/attach-table-2.png)
+![Alt text](/img/sql/attach-table-2.png)
 
-#### Step 3. Linking Table in Databend Cloud
+#### 步骤 3. 在 Databend Cloud 中链接表
 
-Sign in to Databend Cloud and run the following command in a worksheet to link a table named "population_readonly" in read-only mode:
+登录 Databend Cloud 并在工作表中运行以下命令以链接名为 "population_readonly" 的表：
 
 ```sql title='Databend Cloud:'
 ATTACH TABLE population_readonly 's3://databend-toronto/1/556/' CONNECTION = (
   AWS_KEY_ID = '<your_aws_key_id>',
   AWS_SECRET_KEY = '<your_aws_secret_key>'
-) READ_ONLY;
+);
 ```
 
-To verify the success of the link, run the following query in Databend Cloud:
+要验证链接是否成功，请在 Databend Cloud 中运行以下查询：
 
 ```sql title='Databend Cloud:'
 SELECT * FROM population_readonly;
 
--- Expected result:
+-- 预期结果：
 ┌────────────────────────────────────┐
 │       city       │    population   │
 ├──────────────────┼─────────────────┤
@@ -226,7 +114,7 @@ SELECT * FROM population_readonly;
 └────────────────────────────────────┘
 ```
 
-You're all set! If you update the source table in Databend, you can observe the same changes reflected in the target table on Databend Cloud. For example, if you change the population of Toronto to 2,371,571 in the source table:
+一切就绪！如果您在 Databend 中更新源表，您可以在 Databend Cloud 中的目标表中观察到相同的更改。例如，如果您将源表中 Toronto 的人口更改为 2,371,571：
 
 ```sql title='Databend:'
 UPDATE population
@@ -234,12 +122,12 @@ SET population = 2371571
 WHERE city = 'Toronto';
 ```
 
-You can see that the updates are synced to the attached table in Databend Cloud:
+您可以看到更新已同步到 Databend Cloud 中的附加表：
 
 ```sql title='Databend Cloud:'
 SELECT * FROM population_readonly;
 
--- Expected result:
+-- 预期结果：
 ┌────────────────────────────────────┐
 │       city       │    population   │
 ├──────────────────┼─────────────────┤
@@ -248,7 +136,3 @@ SELECT * FROM population_readonly;
 │ Vancouver        │          631486 │
 └────────────────────────────────────┘
 ```
-
-If you attempt to update the attached table "population_readonly" in Databend Cloud, you will encounter the following error because the table is attached in read-only mode:
-
-![Alt text](@site/docs/public/img/sql/attach-table-3.png)

@@ -5,17 +5,17 @@ sidebar_position: 4
 
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.26"/>
+<FunctionDescription description="引入或更新于：v1.2.26"/>
 
-Displays a list of all existing network policies in Databend. It provides information about the available network policies, including their names and whether they have any allowed or blocked IP address lists configured.
+显示 Databend 中所有现有网络策略的列表。它提供了有关可用网络策略的信息，包括它们的名称以及是否配置了允许或阻止的 IP 地址列表。
 
-## Syntax
+## 语法
 
 ```sql
 SHOW NETWORK POLICIES
 ```
 
-## Examples
+## 示例
 
 ```sql
 SHOW NETWORK POLICIES;

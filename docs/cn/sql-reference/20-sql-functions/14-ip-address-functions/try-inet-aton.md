@@ -2,31 +2,31 @@
 title: TRY_INET_ATON
 ---
 
-try_inet_aton function is used to take the dotted-quad representation of an IPv4 address as a string and returns the numeric value of the given IP address in form of an integer.
+try_inet_aton 函数用于将 IPv4 地址的点分十进制表示形式作为字符串，并返回该 IP 地址的数值形式（整数）。
 
-## Syntax
+## 语法
 
 ```sql
-TRY_INET_ATON( <expr> )
+TRY_INET_ATON( <str> )
 ```
 
-## Arguments
+## 别名
 
-| Arguments   | Description |
-| ----------- | ----------- |
-| `<expr>` | String.     |
+- [TRY_IPV4_STRING_TO_NUM](try-ipv4-string-to-num.md)
 
-## Return Type
+## 返回类型
 
-An integer.
+整数。
 
-## Examples
+## 示例
 
 ```sql
-SELECT TRY_INET_ATON('10.0.5.9');
-+---------------------------+
-| TRY_INET_ATON('10.0.5.9') |
-+---------------------------+
-|                 167773449 |
-+---------------------------+
+SELECT TRY_INET_ATON('10.0.5.9'), TRY_IPV4_STRING_TO_NUM('10.0.5.9');
+
+┌────────────────────────────────────────────────────────────────┐
+│ try_inet_aton('10.0.5.9') │ try_ipv4_string_to_num('10.0.5.9') │
+│           UInt32          │               UInt32               │
+├───────────────────────────┼────────────────────────────────────┤
+│                 167773449 │                          167773449 │
+└────────────────────────────────────────────────────────────────┘
 ```

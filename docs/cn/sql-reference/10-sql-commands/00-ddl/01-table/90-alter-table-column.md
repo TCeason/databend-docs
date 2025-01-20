@@ -4,75 +4,78 @@ sidebar_position: 4
 ---
 import FunctionDescription from '@site/src/components/FunctionDescription';
 
-<FunctionDescription description="Introduced or updated: v1.2.71"/>
+<FunctionDescription description="引入或更新于：v1.2.415"/>
 
 import EEFeature from '@site/src/components/EEFeature';
 
 <EEFeature featureName='MASKING POLICY'/>
 
-Modifies a table by adding, converting, renaming, changing, or removing a column.
+通过添加、转换、重命名、更改或删除列来修改表。
 
-## Syntax
+## 语法
 
 ```sql
--- Add a column to the end of the table
-ALTER TABLE [IF EXISTS] [database.]<table_name> 
-ADD COLUMN <column_name> <data_type> [NOT NULL | NULL] [DEFAULT <constant_value>];
+-- 向表末尾添加列
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name> 
+ADD [ COLUMN ] <column_name> <data_type> [ NOT NULL | NULL ] [ DEFAULT <constant_value> ]
 
--- Add a column to a specified position
-ALTER TABLE [IF EXISTS] [database.]<table_name> 
-ADD COLUMN <column_name> <data_type> [NOT NULL | NULL] [DEFAULT <constant_value>] [FIRST | AFTER <column_name>]
+-- 向指定位置添加列
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name> 
+ADD [ COLUMN ] <column_name> <data_type> [ NOT NULL | NULL ] [ DEFAULT <constant_value> ] [ FIRST | AFTER <column_name> ]
 
--- Add a virtual computed column
-ALTER TABLE [IF EXISTS] [database.]<table_name> 
-ADD COLUMN <column_name> <data_type> AS (<expr>) VIRTUAL;
+-- 添加虚拟计算列
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name> 
+ADD [ COLUMN ] <column_name> <data_type> AS (<expr>) VIRTUAL
 
--- Convert a stored computed column to a regular column
-ALTER TABLE [IF EXISTS] [database.]<table_name> 
-MODIFY COLUMN <column_name> DROP STORED;
+-- 将存储的计算列转换为普通列
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name> 
+MODIFY [ COLUMN ] <column_name> DROP STORED
 
--- Rename a column
-ALTER TABLE [IF EXISTS] [database.]<table_name>
-RENAME COLUMN <column_name> TO <new_column_name>;
+-- 重命名列
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name>
+RENAME [ COLUMN ] <column_name> TO <new_column_name>
 
--- Change the data type of one or multiple columns
-ALTER TABLE [IF EXISTS] [database.]<table_name> 
-MODIFY COLUMN <column_name> <new_data_type> [DEFAULT <constant_value>][, COLUMN <column_name> <new_data_type> [DEFAULT <constant_value>], ...]
+-- 更改数据类型和/或注释
+-- 如果只想修改或添加列的注释，仍然必须在命令中指定该列的当前数据类型
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name> 
+MODIFY [ COLUMN ] <column_name> <new_data_type> [ DEFAULT <constant_value> ] [ COMMENT '<comment>' ]
+       [ , [ COLUMN ] <column_name> <new_data_type> [ DEFAULT <constant_value> ] [ COMMENT '<comment>' ] ]
+       ...
 
--- Set / Unset masking policy for a column
-ALTER TABLE [IF EXISTS] [database.]<table_name>
-MODIFY COLUMN <column_name> SET MASKING POLICY <policy_name>
+-- 为列设置/取消设置脱敏策略
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name>
+MODIFY [ COLUMN ] <column_name> SET MASKING POLICY <policy_name>
 
-ALTER TABLE [IF EXISTS] [database.]<table_name>
-MODIFY COLUMN <column_name> UNSET MASKING POLICY
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name>
+MODIFY [ COLUMN ] <column_name> UNSET MASKING POLICY
 
--- Remove a column
-ALTER TABLE [IF EXISTS] [database.]<table_name> 
-DROP COLUMN <column_name>;
+-- 删除列
+ALTER TABLE [ IF EXISTS ] [ <database_name>. ]<table_name> 
+DROP [ COLUMN ] <column_name>
 ```
 
 :::note
-- Only a constant value can be accepted as a default value when adding or modifying a column. If a non-constant expression is used, an error will occur.
-- Adding a stored computed column with ALTER TABLE is not supported yet.
-- When you change the data type of a table's columns, there's a risk of conversion errors. For example, if you try to convert a column with text (String) to numbers (Float), it might cause problems.
-- When you set a masking policy for a column, make sure that the data type (refer to the parameter *arg_type_to_mask* in the syntax of [CREATE MASKING POLICY](../12-mask-policy/create-mask-policy.md)) defined in the policy matches the column.
+- 在添加或修改列时，只能接受常量值作为默认值。如果使用非常量表达式，将会报错。
+- 目前不支持通过 ALTER TABLE 添加存储的计算列。
+- 当更改表列的数据类型时，存在转换错误的风险。例如，如果尝试将包含文本（String）的列转换为数字（Float），可能会导致问题。
+- 当为列设置脱敏策略时，请确保策略中定义的数据类型（参考 [CREATE MASKING POLICY](../12-mask-policy/create-mask-policy.md) 语法中的参数 *arg_type_to_mask*）与列的数据类型匹配。
 :::
 
-## Examples
+## 示例
 
-### Example 1: Adding, Renaming, and Removing a Column
+### 示例 1：添加、重命名和删除列
 
-This example illustrates the creation of a table called "default.users" with columns 'username', 'email', and 'age'. It showcases the addition of columns 'id' and 'middle_name' with various constraints. The example also demonstrates the renaming and subsequent removal of the "age" column.
+此示例展示了如何创建一个名为 "default.users" 的表，包含 'username'、'email' 和 'age' 列。它展示了如何添加带有各种约束的 'id' 和 'middle_name' 列。该示例还演示了如何重命名并随后删除 "age" 列。
 
 ```sql
--- Create a table
+-- 创建表
 CREATE TABLE default.users (
   username VARCHAR(50) NOT NULL,
   email VARCHAR(255),
   age INT
 );
 
--- Add a column to the end of the table
+-- 向表末尾添加列
 ALTER TABLE default.users
 ADD COLUMN business_email VARCHAR(255) NOT NULL DEFAULT 'example@example.com';
 
@@ -85,7 +88,7 @@ email         |VARCHAR|YES |NULL                 |     |
 age           |INT    |YES |NULL                 |     |
 business_email|VARCHAR|NO  |'example@example.com'|     |
 
--- Add a column to the beginning of the table
+-- 向表开头添加列
 ALTER TABLE default.users
 ADD COLUMN id int NOT NULL FIRST;
 
@@ -99,7 +102,7 @@ email         |VARCHAR|YES |NULL                 |     |
 age           |INT    |YES |NULL                 |     |
 business_email|VARCHAR|NO  |'example@example.com'|     |
 
--- Add a column after the column 'username'
+-- 在 'username' 列后添加列
 ALTER TABLE default.users
 ADD COLUMN middle_name VARCHAR(50) NULL AFTER username;
 
@@ -114,7 +117,7 @@ email         |VARCHAR|YES |NULL                 |     |
 age           |INT    |YES |NULL                 |     |
 business_email|VARCHAR|NO  |'example@example.com'|     |
 
--- Rename a column
+-- 重命名列
 ALTER TABLE default.users
 RENAME COLUMN age TO new_age;
 
@@ -129,7 +132,7 @@ email         |VARCHAR|YES |NULL                 |     |
 new_age       |INT    |YES |NULL                 |     |
 business_email|VARCHAR|NO  |'example@example.com'|     |
 
--- Remove a column
+-- 删除列
 ALTER TABLE default.users
 DROP COLUMN new_age;
 
@@ -144,26 +147,26 @@ email         |VARCHAR|YES |NULL                 |     |
 business_email|VARCHAR|NO  |'example@example.com'|     |
 ```
 
-### Example 2: Adding a Computed Column
+### 示例 2：添加计算列
 
-This example demonstrates creating a table for storing employee information, inserting data into the table, and adding a computed column to calculate the age of each employee based on their birth year.
+此示例演示了如何创建一个存储员工信息的表，向表中插入数据，并添加一个计算列以根据员工的出生年份计算其年龄。
 
 ```sql
--- Create a table
+-- 创建表
 CREATE TABLE Employees (
   ID INT,
   Name VARCHAR(50),
   BirthYear INT
 );
 
--- Insert data
+-- 插入数据
 INSERT INTO Employees (ID, Name, BirthYear)
 VALUES
   (1, 'John Doe', 1990),
   (2, 'Jane Smith', 1985),
   (3, 'Robert Johnson', 1982);
 
--- Add a computed column named Age
+-- 添加名为 Age 的计算列
 ALTER TABLE Employees
 ADD COLUMN Age INT64 AS (2023 - BirthYear) VIRTUAL;
 
@@ -176,9 +179,9 @@ ID | Name          | BirthYear | Age
 3  | Robert Johnson| 1982      | 41
 ```
 
-### Example 3: Converting a Computed Column
+### 示例 3：转换计算列
 
-This example creates a table called "products" with columns for ID, price, quantity, and a computed column "total_price." The ALTER TABLE statement removes the computed functionality from the "total_price" column, converting it into a regular column.
+此示例创建了一个名为 "products" 的表，包含 ID、price、quantity 和计算列 "total_price"。ALTER TABLE 语句从 "total_price" 列中删除计算功能，将其转换为普通列。
 
 ```sql
 CREATE TABLE IF NOT EXISTS products (
@@ -192,9 +195,9 @@ ALTER TABLE products
 MODIFY COLUMN total_price DROP STORED;
 ```
 
-### Example 4: Changing Data Type of a Column
+### 示例 4：更改列的数据类型
 
-This example creates a table named "students_info" with columns for "id," "name," and "age," inserts some sample data, and then modifies the data type of the "age" column from INT to VARCHAR(10).
+此示例演示了如何修改列的数据类型并为其添加注释。
 
 ```sql
 CREATE TABLE students_info (
@@ -203,30 +206,35 @@ CREATE TABLE students_info (
   age INT
 );
 
-INSERT INTO students_info VALUES
-  (1, 'John Doe', 25),
-  (2, 'Jane Smith', 28),
-  (3, 'Michael Johnson', 22);
-
+-- 将 'age' 列的数据类型更改为 VARCHAR，默认值为 0
 ALTER TABLE students_info MODIFY COLUMN age VARCHAR(10) DEFAULT '0';
-INSERT INTO students_info (id, name) VALUES  (4, 'Eric McMond');
 
-SELECT * FROM students_info;
+SHOW CREATE TABLE students_info;
 
-id|name           |age|
---+---------------+---+
- 4|Eric McMond    |0  |
- 1|John Doe       |25 |
- 2|Jane Smith     |28 |
- 3|Michael Johnson|22 |
+┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│     Table     │                                                    Create Table                                                   │
+├───────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ students_info │ CREATE TABLE students_info (\n  id INT NULL,\n  name VARCHAR NULL,\n  age VARCHAR NULL DEFAULT '0'\n) ENGINE=FUSE │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+-- 为 'age' 列添加注释
+ALTER TABLE students_info MODIFY COLUMN age VARCHAR(10) COMMENT 'abc';
+
+SHOW CREATE TABLE students_info;
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│     Table     │                                                           Create Table                                                          │
+├───────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ students_info │ CREATE TABLE students_info (\n  id INT NULL,\n  name VARCHAR NULL,\n  age VARCHAR NULL DEFAULT '0' COMMENT 'abc'\n) ENGINE=FUSE │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Example 5: Setting Masking Policy a Column
+### 示例 5：为列设置脱敏策略
 
-This example illustrates the process of setting up a masking policy to selectively reveal or mask sensitive data based on user roles.
+此示例展示了如何设置脱敏策略，以根据用户角色选择性地显示或隐藏敏感数据。
 
 ```sql
--- Create a table and insert sample data
+-- 创建表并插入示例数据
 CREATE TABLE user_info (
     id INT,
     email STRING
@@ -235,15 +243,15 @@ CREATE TABLE user_info (
 INSERT INTO user_info (id, email) VALUES (1, 'sue@example.com');
 INSERT INTO user_info (id, email) VALUES (2, 'eric@example.com');
 
--- Create a role
+-- 创建角色
 CREATE ROLE 'MANAGERS';
 GRANT ALL ON *.* TO ROLE 'MANAGERS';
 
--- Create a user and grant the role to the user
+-- 创建用户并将角色授予用户
 CREATE USER manager_user IDENTIFIED BY 'databend';
 GRANT ROLE 'MANAGERS' TO 'manager_user';
 
--- Create a masking policy
+-- 创建脱敏策略
 CREATE MASKING POLICY email_mask
 AS
   (val string)
@@ -256,10 +264,10 @@ AS
   END
   COMMENT = 'hide_email';
 
--- Associate the masking policy with the 'email' column
+-- 将脱敏策略与 'email' 列关联
 ALTER TABLE user_info MODIFY COLUMN email SET MASKING POLICY email_mask;
 
--- Query with the Root user
+-- 使用 Root 用户查询
 SELECT * FROM user_info;
 
 id|email    |

@@ -1,97 +1,100 @@
 ---
-title: OPTIMIZE TABLE
+title: 优化表
 sidebar_position: 8
 ---
+import FunctionDescription from '@site/src/components/FunctionDescription';
+
+<FunctionDescription description="引入或更新版本：v1.2.395"/>
 
 import DetailsWrap from '@site/src/components/DetailsWrap';
 
-Optimizing a table in Databend involves compacting or purging historical data to save storage space and enhance query performance.
+在 Databend 中优化表涉及压缩或清除历史数据，以节省存储空间并提升查询性能。
 
 <DetailsWrap>
 
 <details>
-  <summary>Why Optimize?</summary>
-    <div>Databend stores data in tables using the Parquet format, which is organized into blocks. Additionally, Databend supports time travel functionality, where each operation that modifies a table generates a Parquet file that captures and reflects the changes made to the table.</div><br/>
+  <summary>为什么需要优化？</summary>
+    <div>Databend 使用 Parquet 格式将数据存储在表中，数据被组织成块。此外，Databend 支持时间回溯功能，每次修改表的操作都会生成一个 Parquet 文件，记录并反映对表的更改。</div><br/>
 
-   <div>As a table accumulates more Parquet files over time, it can lead to performance issues and increased storage requirements. To optimize the table's performance, historical Parquet files can be deleted when they are no longer needed. This optimization can help to improve query performance and reduce the amount of storage space used by the table.</div>
+   <div>随着表随着时间的推移积累更多的 Parquet 文件，可能会导致性能问题和存储需求增加。为了优化表的性能，可以在不再需要时删除历史 Parquet 文件。这种优化有助于提高查询性能并减少表使用的存储空间。</div>
 </details>
 
 </DetailsWrap>
 
-## Databend Data Storage: Snapshot, Segment, and Block
+## Databend 数据存储：快照、段和块
 
-Snapshot, segment, and block are the concepts Databend uses for data storage. Databend uses them to construct a hierarchical structure for storing table data.
+快照、段和块是 Databend 用于数据存储的概念。Databend 使用它们来构建存储表数据的分层结构。
 
 ![](/img/sql/storage-structure.PNG)
 
-Databend automatically creates table snapshots upon data updates. A snapshot represents a version of the table's segment metadata.
+Databend 在数据更新时会自动创建表快照。快照表示表段元数据的一个版本。
 
-When working with Databend, you're most likely to access a snapshot with the snapshot ID when you retrieve and query a previous version of the table's data with the [AT](../../20-query-syntax/03-query-at.md) clause.
+在使用 Databend 时，您最有可能通过快照 ID 访问快照，当您使用 [AT](../../20-query-syntax/03-query-at.md) 子句检索和查询表的先前版本数据时。
 
-A snapshot is a JSON file that does not save the table's data but indicate the segments the snapshot links to. If you run [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md) against a table, you can find the saved snapshots for the table.
+快照是一个 JSON 文件，它不保存表的数据，但指示快照链接到的段。如果您对表运行 [FUSE_SNAPSHOT](../../../20-sql-functions/16-system-functions/fuse_snapshot.md)，您可以找到表的保存快照。
 
-A segment is a JSON file that organizes the storage blocks (at least 1, at most 1,000) where the data is stored. If you run [FUSE_SEGMENT](../../../20-sql-functions/16-system-functions/fuse_segment.md) against a snapshot with the snapshot ID, you can find which segments are referenced by the snapshot.
+段是一个 JSON 文件，它组织存储数据的块（至少 1 个，最多 1,000 个）。如果您使用快照 ID 对快照运行 [FUSE_SEGMENT](../../../20-sql-functions/16-system-functions/fuse_segment.md)，您可以找到快照引用的段。
 
-Databends saves actual table data in parquet files and considers each parquet file as a block. If you run [FUSE_BLOCK](../../../20-sql-functions/16-system-functions/fuse_block.md) against a snapshot with the snapshot ID, you can find which blocks are referenced by the snapshot.
+Databend 将实际表数据保存在 parquet 文件中，并将每个 parquet 文件视为一个块。如果您使用快照 ID 对快照运行 [FUSE_BLOCK](../../../20-sql-functions/16-system-functions/fuse_block.md)，您可以找到快照引用的块。
 
-Databend creates a unique ID for each database and table for storing the snapshot, segment, and block files and saves them to your object storage in the path `<bucket_name>/<tenant_id>/<db_id>/<table_id>/`. Each snapshot, segment, and block file is named with a UUID (32-character lowercase hexadecimal string).
+Databend 为每个数据库和表创建唯一 ID，用于存储快照、段和块文件，并将它们保存到您的对象存储中的路径 `<bucket_name>/<tenant_id>/<db_id>/<table_id>/`。每个快照、段和块文件都使用 UUID（32 字符小写十六进制字符串）命名。
 
-| File     | Format  | Filename                        | Storage Folder                                      |
+| 文件     | 格式  | 文件名                        | 存储文件夹                                      |
 |----------|---------|---------------------------------|-----------------------------------------------------|
-| Snapshot | JSON    | `<32bitUUID>_<version>.json`    | `<bucket_name>/<tenant_id>/<db_id>/<table_id>/_ss/` |
-| Segment  | JSON    | `<32bitUUID>_<version>.json`    | `<bucket_name>/<tenant_id>/<db_id>/<table_id>/_sg/` |
-| Block    | parquet | `<32bitUUID>_<version>.parquet` | `<bucket_name>/<tenant_id>/<db_id>/<table_id>/_b/`  |
+| 快照 | JSON    | `<32bitUUID>_<version>.json`    | `<bucket_name>/<tenant_id>/<db_id>/<table_id>/_ss/` |
+| 段  | JSON    | `<32bitUUID>_<version>.json`    | `<bucket_name>/<tenant_id>/<db_id>/<table_id>/_sg/` |
+| 块    | parquet | `<32bitUUID>_<version>.parquet` | `<bucket_name>/<tenant_id>/<db_id>/<table_id>/_b/`  |
 
-## Table Optimizations
+## 表优化
 
-In Databend, it's advisable to aim for an ideal block size of either 100MB (uncompressed) or 1,000,000 rows, with each segment consisting of 1,000 blocks. To maximize table optimization, it's crucial to gain a clear understanding of when and how to apply various optimization techniques, such as [Segment Compaction](#segment-compaction), [Block Compaction](#block-compaction), and [Purging](#purging).
+在 Databend 中，建议将理想的块大小设置为 100MB（未压缩）或 1,000,000 行，每个段由 1,000 个块组成。为了最大化表优化，必须清楚地了解何时以及如何应用各种优化技术，例如 [段压缩](#segment-compaction)、[块压缩](#block-compaction) 和 [清除](#purging)。
 
-- When using the COPY INTO or REPLACE INTO command to write data into a table that includes a cluster key, Databend will automatically initiate a re-clustering process, as well as a segment and block compact process.
+- 当使用 COPY INTO 或 REPLACE INTO 命令将数据写入包含集群键的表时，Databend 将自动启动重新聚类过程，以及段和块压缩过程。
 
-- Segment & block compactions support distributed execution in cluster environments. You can enable them by setting ENABLE_DISTRIBUTED_COMPACT to 1. This helps enhance data query performance and scalability in cluster environments.
+- 段和块压缩支持在集群环境中分布式执行。您可以通过将 ENABLE_DISTRIBUTED_COMPACT 设置为 1 来启用它们。这有助于提高集群环境中的数据查询性能和可扩展性。
 
   ```sql
   SET enable_distributed_compact = 1;
   ```
 
-### Segment Compaction
+### 段压缩
 
-Compact segments when a table has too many small segments (less than `100 blocks` per segment).
+当表有太多小段（每段少于 `100 个块`）时，压缩段。
 ```sql
 SELECT
   block_count,
   segment_count,
   IF(
               block_count / segment_count < 100,
-              'The table needs segment compact now',
-              'The table does not need segment compact now'
+              '表现在需要段压缩',
+              '表现在不需要段压缩'
     ) AS advice
 FROM
   fuse_snapshot('your-database', 'your-table')
     LIMIT 1;
 ```
 
-**Syntax**
+**语法**
 
 ```sql
 OPTIMIZE TABLE [database.]table_name COMPACT SEGMENT [LIMIT <segment_count>]    
 ```
 
-Compacts the table data by merging small segments into larger ones.
+通过将小段合并为较大的段来压缩表数据。
 
-- The option LIMIT sets the maximum number of segments to be compacted. In this case, Databend will select and compact the latest segments.
+- 选项 LIMIT 设置要压缩的段的最大数量。在这种情况下，Databend 将选择并压缩最新的段。
 
-**Example**
+**示例**
 
 ```sql
--- Check whether need segment compact
+-- 检查是否需要段压缩
 SELECT
   block_count,
   segment_count,
   IF(
               block_count / segment_count < 100,
-              'The table needs segment compact now',
-              'The table does not need segment compact now'
+              '表现在需要段压缩',
+              '表现在不需要段压缩'
     ) AS advice
 FROM
   fuse_snapshot('hits', 'hits');
@@ -99,20 +102,20 @@ FROM
 +-------------+---------------+-------------------------------------+
 | block_count | segment_count | advice                              |
 +-------------+---------------+-------------------------------------+
-|         751 |            32 | The table needs segment compact now |
+|         751 |            32 | 表现在需要段压缩 |
 +-------------+---------------+-------------------------------------+
     
--- Compact segment
+-- 压缩段
 OPTIMIZE TABLE hits COMPACT SEGMENT;
     
--- Check again
+-- 再次检查
 SELECT
   block_count,
   segment_count,
   IF(
               block_count / segment_count < 100,
-              'The table needs segment compact now',
-              'The table does not need segment compact now'
+              '表现在需要段压缩',
+              '表现在不需要段压缩'
     ) AS advice
 FROM
   fuse_snapshot('hits', 'hits')
@@ -121,17 +124,17 @@ FROM
 +-------------+---------------+---------------------------------------------+
 | block_count | segment_count | advice                                      |
 +-------------+---------------+---------------------------------------------+
-|         751 |             1 | The table does not need segment compact now |
+|         751 |             1 | 表现在不需要段压缩 |
 +-------------+---------------+---------------------------------------------+
 ```
 
-### Block Compaction
+### 块压缩
 
-Compact blocks when a table has a large number of small blocks or when the table has a high percentage of inserted, deleted, or updated rows.
+当表有大量小块或表中有高比例的插入、删除或更新行时，压缩块。
 
-You can check it with if the uncompressed size of each block is close to the perfect size of `100MB`. 
+您可以检查每个块的未压缩大小是否接近理想的 `100MB` 大小。
 
-If the size is less than `50MB`, we suggest doing block compaction, as it indicates too many small blocks:
+如果大小小于 `50MB`，我们建议进行块压缩，因为这表明有太多小块：
 
 ```sql
 SELECT
@@ -139,8 +142,8 @@ SELECT
   humanize_size(bytes_uncompressed / block_count) AS per_block_uncompressed_size,
   IF(
               bytes_uncompressed / block_count / 1024 / 1024 < 50,
-              'The table needs block compact now',
-              'The table does not need block compact now'
+              '表现在需要块压缩',
+              '表现在不需要块压缩'
     ) AS advice
 FROM
   fuse_snapshot('your-database', 'your-table')
@@ -148,102 +151,107 @@ FROM
 ```
 
 :::info
-We recommend performing segment compaction first, followed by block compaction.
+我们建议先进行段压缩，然后再进行块压缩。
 :::
 
-**Syntax**
+**语法**
 ```sql
 OPTIMIZE TABLE [database.]table_name COMPACT [LIMIT <segment_count>]    
 ```
-Compacts the table data by merging small blocks and segments into larger ones.
+通过将小块和段合并为较大的块和段来压缩表数据。
 
-- This command creates a new snapshot (along with compacted segments and blocks) of the most recent table data without affecting the existing storage files, so the storage space won't be released until you purge the historical data.
+- 此命令创建最新表数据的新快照（以及压缩的段和块），而不影响现有的存储文件，因此在清除历史数据之前不会释放存储空间。
 
-- Depending on the size of the given table, it may take quite a while to complete the execution.
+- 根据给定表的大小，完成执行可能需要相当长的时间。
 
-- The option LIMIT sets the maximum number of segments to be compacted. In this case, Databend will select and compact the latest segments.
+- 选项 LIMIT 设置要压缩的段的最大数量。在这种情况下，Databend 将选择并压缩最新的段。
 
-- Databend will automatically re-cluster a clustered table after the compacting process.
+- Databend 将在压缩过程后自动重新聚类已聚类的表。
 
-**Example**
+**示例**
 ```sql
 OPTIMIZE TABLE my_database.my_table COMPACT LIMIT 50;
 ```
 
-### Purging
+### 清除
 
-Purging permanently removes historical data, including unused snapshots, segments, and blocks, except for the snapshots within the retention period (including the segments and blocks referenced by this snapshot), which will be retained. This can save storage space but may affect the Time Travel feature. Consider purging when:
+清除永久删除历史数据，包括未使用的快照、段和块，但保留保留期内的快照（包括此快照引用的段和块）。这可以节省存储空间，但可能会影响时间回溯功能。在以下情况下考虑清除：
 
-- The storage cost is a major concern, and you don't require historical data for Time Travel or other purposes.
-
-- You've compacted your table and want to remove older, unused data.
+- 存储成本是主要问题，并且您不需要历史数据进行时间回溯或其他用途。
+- 您已经压缩了表，并希望删除旧的、未使用的数据。
 
 :::note
-Historical data within the default retention period of 12 hours will not be removed. To adjust the retention period according to your needs, you can use the *retention_period* setting. In the Example section below, you can see how the retention period is initially set to 0, enabling you to insert data into the table and immediately remove historical data.
+默认保留期 24 小时内的历史数据不会被删除。要调整保留期，请使用 *data_retention_time_in_days* 设置。
 :::
 
-**Syntax**
+**语法**
 
 ```sql
-OPTIMIZE TABLE <table_name> PURGE [BEFORE (SNAPSHOT => '<SNAPSHOT_ID>') 
-| (TIMESTAMP => '<TIMESTAMP>'::TIMESTAMP)] [LIMIT <snapshot_count>]
+OPTIMIZE TABLE <table_name> PURGE 
+  [ BEFORE 
+          (SNAPSHOT => '<SNAPSHOT_ID>') | 
+          (TIMESTAMP => '<TIMESTAMP>'::TIMESTAMP) |
+          (STREAM => <stream_name>)
+  ]
+  [ LIMIT <snapshot_count> ]
 ```
 
-- `[BEFORE (SNAPSHOT => '<SNAPSHOT_ID>') 
-| (TIMESTAMP => '<TIMESTAMP>'::TIMESTAMP)]`
+| 参数 | 描述                                                                                                                                                                          |
+|-----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| BEFORE    | 指定清除历史数据的条件。它与 `SNAPSHOT`、`TIMESTAMP` 或 `STREAM` 选项一起使用，以定义应清除数据的时间点。<br/>当指定 `BEFORE` 选项时，命令首先选择由指定选项指示的基本快照，然后删除在此基本快照之前生成的快照。在指定流的情况下，命令将选择流创建之前最近的快照作为基本快照，然后删除在此最近快照之前生成的快照。|
+| LIMIT     | 设置要清除的快照的最大数量。指定后，Databend 将选择并清除最旧的快照，最多到指定的数量。                                   |
 
-  Purges the historical data that was generated before the specified snapshot or timestamp was created.
+**示例**
 
-- `[LIMIT <snapshot_count>]`
+此示例演示了使用 `BEFORE STREAM` 选项清除历史数据。
 
-  Sets the maximum number of snapshots to be purged. Databend will select and purge the oldest snapshots.
-
-
-**Example**
+1. 创建一个名为 `t` 的表，其中包含一个列 `a`，并向表中插入两行，值为 1 和 2。
 
 ```sql
-SET retention_period = 0;
-
--- Create a table and insert data using three INSERT statements
-CREATE TABLE t(x int);
+CREATE TABLE t(a INT);
 
 INSERT INTO t VALUES(1);
 INSERT INTO t VALUES(2);
+```
+
+2. 在表 `t` 上创建一个名为 `s` 的流，并向表中插入一个额外的行，值为 3。
+
+```sql
+CREATE STREAM s ON TABLE t;
+
 INSERT INTO t VALUES(3);
+```
 
-SELECT * FROM t;
+3. 返回表 `t` 的快照 ID 和相应的时间戳。
 
-x|
--+
-1|
-2|
-3|
+```sql
+SELECT snapshot_id, timestamp FROM FUSE_SNAPSHOT('default', 't');
 
--- Show the created snapshots with their timestamps
-SELECT snapshot_id, segment_count, block_count, timestamp
-FROM fuse_snapshot('default', 't');
+┌───────────────────────────────────────────────────────────────┐
+│            snapshot_id           │          timestamp         │
+├──────────────────────────────────┼────────────────────────────┤
+│ 00dd8ca67c1f461987f31a6b3a1c3c84 │ 2024-04-02 18:09:39.157702 │
+│ e448bb2bf488489dae7294b0a8af38d1 │ 2024-04-02 18:09:34.986507 │
+│ 2ac038dd83e741afbae543b170105d63 │ 2024-04-02 18:09:34.966336 │
+└───────────────────────────────────────────────────────────────┘
 
-snapshot_id                     |segment_count|block_count|timestamp            |
---------------------------------+-------------+-----------+---------------------+
-edc9477b62c24f299c05a4d189030772|            3|          3|2022-12-26 19:33:49.0|
-256f1fe2e3974ee595474b2a8cad7a39|            2|          2|2022-12-26 19:33:42.0|
-1e060f7d145747578963b5a7e3b14742|            1|          1|2022-12-26 19:32:57.0|
+-- 仅用于演示目的，将数据保留时间设置为 0。不建议在生产环境中使用。
+SET data_retention_time_in_days = 0;
+```
 
--- Purge the historical data generated before the new snapshot was created.
-OPTIMIZE TABLE t PURGE BEFORE (SNAPSHOT => '9828b23f74664ff3806f44bbc1925ea5');
+4. 使用 `BEFORE STREAM` 选项清除历史快照。
 
-SELECT snapshot_id, segment_count, block_count, timestamp
-FROM fuse_snapshot('default', 't');
+```sql
+OPTIMIZE TABLE t PURGE BEFORE (STREAM => s);
 
-snapshot_id                     |segment_count|block_count|timestamp            |
---------------------------------+-------------+-----------+---------------------+
-9828b23f74664ff3806f44bbc1925ea5|            1|          1|2022-12-26 19:39:27.0|
+-- 命令选择快照 ID e448bb2bf488489dae7294b0a8af38d1 作为基本快照，这是在流 's' 创建之前生成的。
+-- 因此，快照 ID 2ac038dd83e741afbae543b170105d63，在基本快照之前生成的，被删除。
+SELECT snapshot_id, timestamp FROM FUSE_SNAPSHOT('default', 't');
 
-SELECT * FROM t;
-
-x|
--+
-1|
-2|
-3|
+┌───────────────────────────────────────────────────────────────┐
+│            snapshot_id           │          timestamp         │
+├──────────────────────────────────┼────────────────────────────┤
+│ 00dd8ca67c1f461987f31a6b3a1c3c84 │ 2024-04-02 18:09:39.157702 │
+│ e448bb2bf488489dae7294b0a8af38d1 │ 2024-04-02 18:09:34.986507 │
+└───────────────────────────────────────────────────────────────┘
 ```

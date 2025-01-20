@@ -1,17 +1,17 @@
 ---
 title: DROP VIEW
-sidebar_position: 3
+sidebar_position: 5
 ---
 
-Drop the view.
+删除视图。
 
-## Syntax
+## 语法
 
 ```sql
-DROP VIEW [IF EXISTS] [db.]view_name
+DROP VIEW [ IF EXISTS ] [ <database_name>. ]view_name
 ```
 
-## Examples
+## 示例
 
 ```sql
 DROP VIEW IF EXISTS tmp_view;
